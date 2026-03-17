@@ -1,0 +1,297 @@
+# ==============================================================================
+# CONFIGURAZIONE CENTRALE — Feature Selection Stability Study
+# "The stability illusion: A simulation-based assessment of feature selection
+#  methods for high-dimensional metabolomics data"
+# ==============================================================================
+# REGOLA: NON hardcodare parametri negli script. Leggere SEMPRE da qui.
+# ==============================================================================
+
+project:
+  name: "feat_selection_stability"
+  seed: 42
+  n_cores: 8            # Modificare in base all'hardware disponibile
+  log_level: "info"     # "debug", "info", "warn", "error"
+
+paths:
+  raw_data: "data/raw"
+  processed_data: "data/processed"
+  empirical_params: "data/empirical_params"
+  simulated_data: "data/simulated"
+  results_fs: "results/feature_selection"
+  results_metrics: "results/metrics"
+  results_cv: "results/cross_validation"
+  checkpoints: "results/checkpoints"
+  figures: "results/figures"
+
+# ------------------------------------------------------------------------------
+# DATASET PUBBLICI
+# ------------------------------------------------------------------------------
+# NOTA: gli accession number specifici vanno verificati interrogando le API.
+# Lo Script 01 tenta il download e logga successo/fallimento per ciascuno.
+# I dataset qui elencati sono candidati; lo script usa solo quelli effettivamente
+# scaricabili e che soddisfano i criteri (caso-controllo, >=30/gruppo, feature table).
+
+datasets:
+  metabolights:
+    api_base: "https://www.ebi.ac.uk/metabolights/ws"
+    ftp_base: "ftp://ftp.ebi.ac.uk/pub/databases/metabolights/studies/public"
+    accessions:
+      # NMR datasets
+      - id: "MTBLS1"
+        platform: "NMR"
+        description: "Type 2 Diabetes — urine NMR"
+        expected_n: 200
+      - id: "MTBLS97"
+        platform: "NMR"
+        description: "Lung cancer — serum NMR"
+        expected_n: 80
+      # LC-MS datasets
+      - id: "MTBLS136"
+        platform: "LC-MS"
+        description: "Colorectal cancer — serum LC-MS"
+        expected_n: 120
+      - id: "MTBLS352"
+        platform: "LC-MS"
+        description: "Chronic kidney disease — plasma LC-MS"
+        expected_n: 100
+      - id: "MTBLS537"
+        platform: "LC-MS"
+        description: "Hepatocellular carcinoma — serum LC-MS"
+        expected_n: 80
+      # Benchmark con ground truth
+      - id: "MTBLS733"
+        platform: "LC-MS"
+        description: "Benchmark spike-in — Piper nigrum standard mixtures"
+        expected_n: 10
+        is_benchmark: true
+        n_true_features: 130
+
+  metabolomics_workbench:
+    api_base: "https://www.metabolomicsworkbench.org/rest"
+    accessions:
+      - id: "ST000388"
+        platform: "LC-MS"
+        description: "Type 2 Diabetes — plasma lipidomics"
+        expected_n: 100
+      - id: "ST001047"
+        platform: "LC-MS"
+        description: "Colorectal cancer — serum metabolomics"
+        expected_n: 80
+      - id: "ST001386"
+        platform: "NMR"
+        description: "Cardiovascular disease — serum NMR"
+        expected_n: 120
+
+  download:
+    timeout_seconds: 120
+    max_retries: 3
+    retry_backoff_seconds: 5
+
+# Criteri di accettazione post-download
+acceptance_criteria:
+  min_samples_per_group: 20
+  min_features: 50
+  max_missing_rate_feature: 0.50  # Rimuovi feature con >50% missing
+  max_missing_rate_sample: 0.40   # Rimuovi campione con >40% missing
+
+# ------------------------------------------------------------------------------
+# METODI DI FEATURE SELECTION (12 metodi)
+# ------------------------------------------------------------------------------
+methods:
+  - name: "wilcoxon_fdr"
+    category: "filter"
+    params:
+      fdr_threshold: 0.05
+
+  - name: "fold_change"
+    category: "filter"
+    params:
+      fc_threshold: 1.5
+
+  - name: "volcano"
+    category: "filter"
+    params:
+      fdr_threshold: 0.05
+      fc_threshold: 1.5
+
+  - name: "lasso"
+    category: "embedded"
+    params:
+      alpha: 1.0
+      lambda_rule: "lambda.1se"
+      nfolds: 10
+
+  - name: "elastic_net"
+    category: "embedded"
+    params:
+      alpha: 0.5
+      lambda_rule: "lambda.1se"
+      nfolds: 10
+
+  - name: "boruta"
+    category: "wrapper"
+    params:
+      maxRuns: 300
+      pValue: 0.01
+
+  - name: "rf_importance"
+    category: "wrapper"
+    params:
+      num_trees: 1000
+      importance: "permutation"
+      top_k_method: "elbow"
+      top_n: 20               # Fallback se elbow non converge
+
+  - name: "stability_selection"
+    category: "meta"
+    params:
+      cutoff: 0.75
+      PFER: 1
+      sampling_type: "SS"
+      B: 100
+
+  - name: "knockoff"
+    category: "embedded"
+    params:
+      fdr: 0.1
+      statistic: "stat.glmnet_coefdiff"
+
+  - name: "horseshoe"
+    category: "bayesian"
+    params:
+      method_tau: "halfCauchy"
+      method_sigma: "Jeffreys"
+      burn: 1000
+      nmc: 3000
+
+  - name: "spike_slab"
+    category: "bayesian"
+    params:
+      bigp_smalln: true
+      max_var: 100
+
+  - name: "shap_xgboost"
+    category: "ml"
+    params:
+      max_depth: 6
+      nrounds: 200
+      eta: 0.1
+      top_k_method: "elbow"
+      top_n: 20
+
+# ------------------------------------------------------------------------------
+# SCENARI DI SIMULAZIONE
+# ------------------------------------------------------------------------------
+simulation:
+  base:
+    n_case: 50
+    n_control: 50
+    p: 500
+    p_true: 20
+    fc: 1.5
+    fc_distribution: "fixed"       # "fixed", "uniform", "decreasing"
+    correlation_source: "empirical" # "empirical", "block", "ar1"
+    correlation_scale: 1.0          # Fattore di scala per la matrice di correlazione
+    missing_rate: 0.05
+    missing_mechanism: "MNAR"
+    preprocessing: "log_auto"
+    n_confounders: 0
+    n_interactions: 0
+
+  scenarios:
+    - name: "S1_pn_ratio"
+      vary: "p_n"
+      levels:
+        - {label: "pn5",  n_case: 50, n_control: 50, p: 500}
+        - {label: "pn10", n_case: 25, n_control: 25, p: 500}
+        - {label: "pn20", n_case: 25, n_control: 25, p: 1000}
+        - {label: "pn50", n_case: 10, n_control: 10, p: 1000}
+
+    - name: "S2_effect_size"
+      vary: "fc"
+      levels:
+        - {label: "fc1.2", fc: 1.2}
+        - {label: "fc1.5", fc: 1.5}
+        - {label: "fc2.0", fc: 2.0}
+        - {label: "fc3.0", fc: 3.0}
+
+    - name: "S3_correlation"
+      vary: "correlation_scale"
+      levels:
+        - {label: "cor_low",    correlation_scale: 0.3}
+        - {label: "cor_mod",    correlation_scale: 0.5}
+        - {label: "cor_high",   correlation_scale: 0.7}
+        - {label: "cor_vhigh",  correlation_scale: 0.9}
+
+    - name: "S4_interactions"
+      vary: "n_interactions"
+      levels:
+        - {label: "int0",  n_interactions: 0}
+        - {label: "int5",  n_interactions: 5}
+        - {label: "int10", n_interactions: 10}
+
+    - name: "S5_confounders"
+      vary: "n_confounders"
+      levels:
+        - {label: "conf0", n_confounders: 0}
+        - {label: "conf1", n_confounders: 1}
+        - {label: "conf3", n_confounders: 3}
+
+    - name: "S6_missing"
+      vary: "missing_rate"
+      levels:
+        - {label: "miss0",   missing_rate: 0.00}
+        - {label: "miss5",   missing_rate: 0.05}
+        - {label: "miss15",  missing_rate: 0.15}
+        - {label: "miss30",  missing_rate: 0.30}
+
+    - name: "S7_preprocessing"
+      vary: "preprocessing"
+      levels:
+        - {label: "none",       preprocessing: "none"}
+        - {label: "log_auto",   preprocessing: "log_auto"}
+        - {label: "log_pareto", preprocessing: "log_pareto"}
+        - {label: "pqn_auto",   preprocessing: "pqn_auto"}
+
+  resampling:
+    n_replications: 30
+    n_bootstrap: 100
+    subsample_fraction: 0.632
+    stratified: true
+
+# ------------------------------------------------------------------------------
+# METRICHE
+# ------------------------------------------------------------------------------
+metrics:
+  stability:
+    primary: ["nogueira", "jaccard"]
+    secondary: ["kuncheva", "dice", "spearman_rank"]
+  accuracy:
+    primary: ["tpr", "fdr"]
+    secondary: ["f1", "mcc"]
+  prediction:
+    primary: ["auc"]
+    secondary: ["balanced_accuracy"]
+    classifier: "logistic_regression"
+    test_fraction: 0.3
+  parsimony: ["n_selected", "prop_selected"]
+  stably_selected_thresholds: [0.50, 0.80, 0.95]
+
+# ------------------------------------------------------------------------------
+# FIGURE
+# ------------------------------------------------------------------------------
+figures:
+  format: "pdf"
+  dpi: 300
+  width: 7
+  height: 5
+  color_palette: "viridis"
+  font_family: "Helvetica"
+  font_size: 10
+  method_colors:
+    filter: "#E69F00"
+    embedded: "#56B4E9"
+    wrapper: "#009E73"
+    meta: "#F0E442"
+    bayesian: "#0072B2"
+    ml: "#D55E00"

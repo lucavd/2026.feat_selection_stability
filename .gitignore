@@ -34,3 +34,19 @@ vignettes/*.pdf
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
+
+# Project-specific: large data files
+data/raw/
+data/simulated/
+results/feature_selection/
+results/checkpoints/
+
+# Keep directory structure
+!data/raw/.gitkeep
+!data/simulated/.gitkeep
+!results/feature_selection/.gitkeep
+!results/checkpoints/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
