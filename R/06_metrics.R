@@ -71,14 +71,15 @@ compute_accuracy_metrics <- function(selected, true_features) {
 #' @param test_fraction Fraction for test set
 #' @param seed Random seed
 #' @return AUC value
-compute_prediction_auc <- function(X, y, selected, test_fraction = 0.3, seed = 42) {
-  if (sum(selected) == 0) return(NA_real_)
+compute_prediction_metrics <- function(X, y, selected, test_fraction = 0.3, seed = 42) {
+  result <- list(auc = NA_real_, balanced_accuracy = NA_real_)
+  if (sum(selected) == 0) return(result)
   if (sum(selected) > nrow(X) - 5) {
     # More features than useful for logistic regression
     # Use only top features
     selected[selected] <- FALSE
     selected[seq_len(min(nrow(X) %/% 3, sum(selected)))] <- TRUE
-    if (sum(selected) == 0) return(NA_real_)
+    if (sum(selected) == 0) return(result)
   }
 
   set.seed(seed)
@@ -96,10 +97,19 @@ compute_prediction_auc <- function(X, y, selected, test_fraction = 0.3, seed = 4
     fit <- glm(y ~ ., data = df_train, family = "binomial",
                control = list(maxit = 100))
     pred <- predict(fit, newdata = df_test, type = "response")
-    auc_val <- as.numeric(pROC::auc(pROC::roc(y[test_idx], pred, quiet = TRUE)))
-    auc_val
+    roc_obj <- pROC::roc(y[test_idx], pred, quiet = TRUE)
+    result$auc <- as.numeric(pROC::auc(roc_obj))
+
+    # Balanced accuracy at optimal threshold
+    pred_class <- as.integer(pred >= 0.5)
+    y_test <- y[test_idx]
+    sens <- sum(pred_class == 1 & y_test == 1) / max(sum(y_test == 1), 1)
+    spec <- sum(pred_class == 0 & y_test == 0) / max(sum(y_test == 0), 1)
+    result$balanced_accuracy <- (sens + spec) / 2
+
+    result
   }, error = function(e) {
-    NA_real_
+    result
   })
 }
 
@@ -176,13 +186,13 @@ all_metrics <- furrr::future_map(fs_files, function(fpath) {
     stably_50 <- selection_freq >= 0.50
     acc_primary <- compute_accuracy_metrics(stably_50, true_feat)
 
-    # --- Prediction AUC (using stably selected features) ---------------------
+    # --- Prediction metrics (using stably selected features) ------------------
     # Load simulated data for prediction
     sim_file <- file.path(sim_dir, paste0("sim_", task_id, ".rds"))
-    auc_val <- NA_real_
+    pred_metrics <- list(auc = NA_real_, balanced_accuracy = NA_real_)
     if (file.exists(sim_file) && sum(stably_50) > 0) {
       sim_data <- readRDS(sim_file)
-      auc_val <- compute_prediction_auc(
+      pred_metrics <- compute_prediction_metrics(
         sim_data$X, sim_data$y, stably_50,
         test_fraction = config$metrics$prediction$test_fraction,
         seed = derive_seed(config$project$seed, paste0("auc_", task_id, "_", method))
@@ -212,7 +222,8 @@ all_metrics <- furrr::future_map(fs_files, function(fpath) {
       f1 = acc_primary$f1,
       mcc = acc_primary$mcc,
       # Prediction
-      auc = auc_val,
+      auc = pred_metrics$auc,
+      balanced_accuracy = pred_metrics$balanced_accuracy,
       # Parsimony
       mean_n_selected = stab$mean_n_selected,
       sd_n_selected = stab$sd_n_selected,

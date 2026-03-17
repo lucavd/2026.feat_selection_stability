@@ -123,7 +123,7 @@ for (acc_id in successful_ids) {
     )
 
     saveRDS(cv_result, out_file)
-    cli::cli_alert_success("  {method$name}: nogueira={round(stab$nogueira$estimate, 3)}, n_selected_50={sum(selection_freq >= 0.5)}")
+    cli::cli_alert_success("  {method$name}: nogueira={round(stab$nogueira$estimate, 3)}, n_selected_50={sum(selection_freq >= config$metrics$stably_selected_thresholds[1])}")
   }
 }
 
@@ -186,8 +186,8 @@ for (plat in names(platform_groups)) {
       spearman_cor <- cor(freq1, freq2, method = "spearman", use = "complete.obs")
 
       # 2. Jaccard of stably selected features (>50%)
-      sel1 <- names(freq1)[freq1 >= 0.5]
-      sel2 <- names(freq2)[freq2 >= 0.5]
+      sel1 <- names(freq1)[freq1 >= config$metrics$stably_selected_thresholds[1]]
+      sel2 <- names(freq2)[freq2 >= config$metrics$stably_selected_thresholds[1]]
       jaccard <- length(intersect(sel1, sel2)) /
         max(length(union(sel1, sel2)), 1)
 
@@ -244,7 +244,7 @@ cv_summary_list <- lapply(cv_files, function(f) {
       category = res$category,
       nogueira = res$stability$nogueira$estimate,
       jaccard = res$stability$jaccard,
-      n_selected_50 = sum(res$selection_freq >= 0.5),
+      n_selected_50 = sum(res$selection_freq >= config$metrics$stably_selected_thresholds[1]),
       n_converged = res$n_converged,
       stringsAsFactors = FALSE
     )
