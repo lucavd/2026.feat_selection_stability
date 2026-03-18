@@ -1,7 +1,7 @@
 # Stato Implementazione Pipeline
 
-> Ultimo aggiornamento: 2026-03-17
-> Status: IMPLEMENTATO — testato localmente, pronto per deploy su server
+> Ultimo aggiornamento: 2026-03-18
+> Status: IMPLEMENTATO — bugfix e hardening applicati post-deploy
 
 ---
 
@@ -10,18 +10,18 @@
 | File | Status | Testato | Descrizione |
 |------|--------|---------|-------------|
 | `config/config.yaml` | ✅ | ✅ | Configurazione centrale unica |
-| `R/00_install_packages.R` | ✅ | ✅ | 48/48 pacchetti installati (3 da fonti alternative) |
+| `R/00_install_packages.R` | ✅ | ✅ | 49 pacchetti (aggiunto `digest`); 3 da fonti alternative |
 | `R/01_download_data.R` | ✅ | ✅ | MTBLS1 scaricato con successo; altri falliti per DNS locale |
-| `R/02_preprocess.R` | ✅ | — | Parsing MAF/JSON, QC, imputazione mediana, normalizzazione |
+| `R/02_preprocess.R` | ✅ | — | Parsing MAF/JSON, QC, imputazione mediana, normalizzazione. Matching sample-metadata robusto (`align_sample_info`). Output include `X_raw` + `X_imputed` |
 | `R/03_extract_empirical_params.R` | ✅ | — | Correlazione Ledoit-Wolf, distribuzioni, eigenvalues |
-| `R/04_simulate.R` | ✅ | — | MVN → exp → FC + confounders + interazioni + MNAR missing |
+| `R/04_simulate.R` | ✅ | — | MVN → exp → FC + confounders + interazioni + MNAR missing. Supporta `correlation_source`: empirical, ar1, block |
 | `R/05_feature_selection.R` | ✅ | — | 12 metodi × 100 bootstrap, checkpointing, parallelizzato |
-| `R/06_metrics.R` | ✅ | — | Nogueira, Jaccard, TPR, FDR, AUC, parsimonia |
-| `R/07_cross_validation.R` | ✅ | — | Bootstrap FS su dati reali + concordanza cross-database |
+| `R/06_metrics.R` | ✅ | — | Nogueira, Jaccard, TPR, FDR, AUC (split stratificato, feature priority), parsimonia. Output: `metrics_all.rds`, `metrics_by_scenario.rds`, `metrics_summary.rds` |
+| `R/07_cross_validation.R` | ✅ | — | Bootstrap FS su dati reali + concordanza cross-database. Gestisce edge case 0/1 bootstrap convergenti |
 | `R/08_figures.R` | ✅ | — | 8 figure PDF publication-quality + supplementari |
-| `R/utils/helpers.R` | ✅ | ✅ | Config, logging, checkpoint, seed deterministico, parallelizzazione |
+| `R/utils/helpers.R` | ✅ | ✅ | Config, logging, checkpoint, seed deterministico, parallelizzazione (cap 100 workers) |
 | `R/utils/fs_methods.R` | ✅ | ✅ | 12 wrapper con interfaccia uniforme + dispatcher |
-| `R/utils/stability_metrics.R` | ✅ | ✅ | Nogueira (Eq.4 + jackknife CI), Jaccard, Kuncheva, Dice, Spearman |
+| `R/utils/stability_metrics.R` | ✅ | ✅ | Nogueira (Eq.4 + jackknife CI; B==2 → NA varianza/CI), Jaccard, Kuncheva, Dice, Spearman |
 
 ---
 
@@ -29,7 +29,7 @@
 
 ### 2.1 Script 00 — Installazione pacchetti
 
-- **48/48 pacchetti installati con successo**
+- **49/49 pacchetti installati con successo** (aggiunto `digest` per hashing)
 - 3 pacchetti richiesti installazione da fonti alternative:
   - `horseshoe` → CRAN archive (v0.2.0)
   - `ComplexHeatmap` → Bioconductor
@@ -76,13 +76,31 @@
 
 **Stima computazionale finale:** 25 livelli × 30 rep × 100 boot × 12 metodi = **900,000 fit**
 
-### 3.2 Imputazione
+### 3.2 Bugfix e hardening (2026-03-18)
+
+| Script | Fix | Impatto |
+|--------|-----|---------|
+| `00_install_packages.R` | Aggiunto pacchetto `digest` alle dipendenze CRAN | Necessario per hashing deterministico |
+| `02_preprocess.R` | Fix sintassi data.table: `..data_cols` → `data_cols, with = FALSE` | Evita errore parsing MAF in certi ambienti |
+| `02_preprocess.R` | Nuove helper `get_matching_colnames()` e `align_sample_info()` per matching robusto sample ↔ metadata | Gestisce ID column variabili tra dataset (Sample Name, Subject ID, etc.) |
+| `02_preprocess.R` | QC filters ora aggiornano `feature_info` e `sample_info` coerentemente con `X` e `y` | Evita mismatch dimensioni dopo filtering |
+| `02_preprocess.R` | Output ora include `X_raw` (pre-impute) e `X_imputed` (post-impute) separati | Permette analisi impatto imputazione |
+| `04_simulate.R` | Nuovo parametro `correlation_source` ("empirical", "ar1", "block") | Supporta strutture di correlazione alternative per sensitivity analysis |
+| `06_metrics.R` | `compute_prediction_metrics()`: split stratificato train/test, `feature_priority` per pruning intelligente | Evita test set senza una classe; usa importanza per selezionare features quando troppe |
+| `06_metrics.R` | Guard `length(unique(y)) < 2` | Evita crash su dataset degenerati |
+| `06_metrics.R` | Output aggiuntivo `metrics_by_scenario.rds` | Facilita analisi per scenario senza riaggregare |
+| `07_cross_validation.R` | Gestione edge case: 0 o 1 bootstrap convergenti → metriche stabilità = NA | Evita crash di `compute_all_stability()` con input insufficiente |
+| `07_cross_validation.R` | `na.rm = TRUE` nelle soglie di selezione frequenza | Evita NA propagation nel conteggio features stabili |
+| `utils/helpers.R` | `setup_parallel()` cap workers a 100 | Previene esaurimento risorse su macchine con molti core |
+| `utils/stability_metrics.R` | Nogueira index con B==2: restituisce NA per varianza e CI | Jackknife leave-one-out richiede B≥3; evita divisione per zero |
+
+### 3.3 Imputazione
 
 - **Design originale:** half-minimum, KNN, missForest, MinProb
 - **Implementato:** median imputation come default
 - **Motivazione:** L'imputation method non è il focus; median è conservativo e riproducibile. Sensitivity analysis con altri metodi può essere aggiunta come supplementary material.
 
-### 3.3 Preprocessing
+### 3.4 Preprocessing
 
 Implementate tutte e 4 le opzioni previste:
 | Codice config | Operazione |
@@ -92,14 +110,14 @@ Implementate tutte e 4 le opzioni previste:
 | `log_pareto` | log2 + Pareto scaling (÷ √sd) |
 | `pqn_auto` | PQN + log2 + autoscaling |
 
-### 3.4 Segnale nelle simulazioni
+### 3.5 Segnale nelle simulazioni
 
 - Dati generati come MVN → exp() (distribuzione log-normale)
 - FC applicato moltiplicativamente post-exp ai campioni caso
 - Direzioni up/down randomizzate per realismo
 - **Nota equivalenza:** FC moltiplicativo su scala originale = shift additivo in scala log. La struttura di correlazione è preservata perché il segnale è impiantato dopo la trasformazione.
 
-### 3.5 Metriche di stabilità — Nogueira index
+### 3.6 Metriche di stabilità — Nogueira index
 
 - Implementazione diretta Equazione 4 di Nogueira et al. (2018, JMLR 18(174):1-54)
 - Varianza: jackknife leave-one-out (Teorema 7)
@@ -137,6 +155,7 @@ R/05 ─── results/feature_selection/                      concordance_resul
           ▼                                               │
 R/06 ─── results/metrics/                                 │
           metrics_all.rds (master table)                  │
+          metrics_by_scenario.rds                         │
           metrics_summary.rds                             │
           │                                               │
           ▼                                               │

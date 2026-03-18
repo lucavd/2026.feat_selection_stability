@@ -100,14 +100,44 @@ for (acc_id in successful_ids) {
       converged[b] <- result$converged
     }
 
-    # Compute stability
-    stab <- compute_all_stability(
-      selection_matrix[converged, , drop = FALSE],
-      importance_matrix[converged, , drop = FALSE]
-    )
-
-    # Selection frequencies
-    selection_freq <- colMeans(selection_matrix[converged, , drop = FALSE])
+    n_converged <- sum(converged)
+    if (n_converged >= 2) {
+      stab <- compute_all_stability(
+        selection_matrix[converged, , drop = FALSE],
+        importance_matrix[converged, , drop = FALSE]
+      )
+      selection_freq <- colMeans(selection_matrix[converged, , drop = FALSE])
+    } else if (n_converged == 1) {
+      selection_freq <- as.numeric(selection_matrix[converged, , drop = FALSE])
+      names(selection_freq) <- colnames(X)
+      stab <- list(
+        nogueira = list(estimate = NA_real_, variance = NA_real_,
+                        ci_lower = NA_real_, ci_upper = NA_real_),
+        jaccard = NA_real_,
+        kuncheva = NA_real_,
+        dice = NA_real_,
+        spearman_rank = NA_real_,
+        n_bootstrap = 1L,
+        p = p,
+        mean_n_selected = mean(rowSums(selection_matrix[converged, , drop = FALSE])),
+        sd_n_selected = NA_real_
+      )
+    } else {
+      selection_freq <- rep(NA_real_, p)
+      names(selection_freq) <- colnames(X)
+      stab <- list(
+        nogueira = list(estimate = NA_real_, variance = NA_real_,
+                        ci_lower = NA_real_, ci_upper = NA_real_),
+        jaccard = NA_real_,
+        kuncheva = NA_real_,
+        dice = NA_real_,
+        spearman_rank = NA_real_,
+        n_bootstrap = 0L,
+        p = p,
+        mean_n_selected = NA_real_,
+        sd_n_selected = NA_real_
+      )
+    }
 
     cv_result <- list(
       accession = acc_id,
@@ -117,13 +147,13 @@ for (acc_id in successful_ids) {
       importance_matrix = importance_matrix,
       selection_freq = selection_freq,
       stability = stab,
-      n_converged = sum(converged),
+      n_converged = n_converged,
       total_time = sum(timings),
       feature_names = colnames(X)
     )
 
     saveRDS(cv_result, out_file)
-    cli::cli_alert_success("  {method$name}: nogueira={round(stab$nogueira$estimate, 3)}, n_selected_50={sum(selection_freq >= config$metrics$stably_selected_thresholds[1])}")
+    cli::cli_alert_success("  {method$name}: nogueira={round(stab$nogueira$estimate, 3)}, n_selected_50={sum(selection_freq >= config$metrics$stably_selected_thresholds[1], na.rm = TRUE)}")
   }
 }
 
@@ -186,8 +216,8 @@ for (plat in names(platform_groups)) {
       spearman_cor <- cor(freq1, freq2, method = "spearman", use = "complete.obs")
 
       # 2. Jaccard of stably selected features (>50%)
-      sel1 <- names(freq1)[freq1 >= config$metrics$stably_selected_thresholds[1]]
-      sel2 <- names(freq2)[freq2 >= config$metrics$stably_selected_thresholds[1]]
+      sel1 <- names(freq1)[which(!is.na(freq1) & freq1 >= config$metrics$stably_selected_thresholds[1])]
+      sel2 <- names(freq2)[which(!is.na(freq2) & freq2 >= config$metrics$stably_selected_thresholds[1])]
       jaccard <- length(intersect(sel1, sel2)) /
         max(length(union(sel1, sel2)), 1)
 
@@ -244,7 +274,7 @@ cv_summary_list <- lapply(cv_files, function(f) {
       category = res$category,
       nogueira = res$stability$nogueira$estimate,
       jaccard = res$stability$jaccard,
-      n_selected_50 = sum(res$selection_freq >= config$metrics$stably_selected_thresholds[1]),
+      n_selected_50 = sum(res$selection_freq >= config$metrics$stably_selected_thresholds[1], na.rm = TRUE),
       n_converged = res$n_converged,
       stringsAsFactors = FALSE
     )

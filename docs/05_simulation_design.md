@@ -1,6 +1,6 @@
 # Design Sperimentale della Simulazione
 
-> Ultimo aggiornamento: 2026-03-17
+> Ultimo aggiornamento: 2026-03-18
 > Status: DRAFT
 
 ---
@@ -130,7 +130,7 @@ for (j in 1:p) {
 |---|----------|-----------|--------|----------|
 | S1 | **p/n ratio** | Varia p e n | p/n = 5, 10, 20, 50 | Range realistico studi pubblicati |
 | S2 | **Effect size** | Varia FC | 1.2, 1.5, 2.0, 3.0 | FC < 1.5 dominante (Metabolomics 2019) |
-| S3 | **Multicollinearità** | Scala correlazioni | r_max = 0.3, 0.5, 0.7, 0.9 | NMR: r fino a 0.9; LC-MS: r tipico 0.3-0.6 |
+| S3 | **Multicollinearità** | Scala correlazioni + tipo struttura | r_max = 0.3, 0.5, 0.7, 0.9; `correlation_source`: empirical (default), ar1, block | NMR: r fino a 0.9; LC-MS: r tipico 0.3-0.6. AR(1) e block per sensitivity |
 | S4 | **Non-linearità** | Aggiungi interazioni | 0, 5, 10 interazioni | Tree-based dovrebbero catturarle, lineari no |
 | S5 | **Confounders** | Aggiungi covariate | 0, 1, 3 confounders | Età, BMI, farmaci (letteratura) |
 | S6 | **Missing data** | Varia % missing | 0%, 5%, 15%, 30% | 5-30% tipico in metabolomica |

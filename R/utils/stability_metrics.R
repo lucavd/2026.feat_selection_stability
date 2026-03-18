@@ -57,6 +57,12 @@ p <- ncol(selection_matrix)  # Number of features
 
   phi_hat <- 1 - (1 / denom) * (1 / p) * sum(pf * (1 - pf)) * (B / (B - 1))
 
+  if (B == 2) {
+    return(list(estimate = phi_hat, variance = NA_real_,
+                ci_lower = NA_real_, ci_upper = NA_real_,
+                n_bootstrap = B, p = p))
+  }
+
   # Variance of the estimator (Theorem 7 in paper)
   # Based on the leave-one-out jackknife variance
   phi_jack <- numeric(B)

@@ -1,6 +1,6 @@
 # Inventario Metriche di Valutazione
 
-> Ultimo aggiornamento: 2026-03-17
+> Ultimo aggiornamento: 2026-03-18
 > Status: DRAFT
 
 ---
@@ -190,12 +190,17 @@ bal_acc <- (sensitivity + specificity) / 2
 
 ```
 Per ogni resampling run b in 1:B:
-  1. Split: training (70%) + test (30%)
+  1. Split stratificato per classe: training (70%) + test (30%)
   2. Feature selection su training ONLY
   3. Train classificatore (es. logistic regression) su training con features selezionate
   4. Predict su test set
   5. Calcola AUC e balanced accuracy
 ```
+
+**Note implementative (2026-03-18):**
+- Lo split train/test è stratificato per classe (garantisce entrambe le classi in entrambi i set)
+- Se il numero di features selezionate supera n/3, si applica pruning basato su `feature_priority` (importance media o frequenza di selezione)
+- Guard per dataset degenerati (classe unica, troppo pochi campioni per classe)
 
 ---
 

@@ -52,6 +52,7 @@ emp_params <- load_result(file.path(params_dir, "empirical_params.rds"))$data
 #' @param fc Fold change magnitude
 #' @param fc_distribution How FC values are assigned ("fixed","uniform","decreasing")
 #' @param cor_matrix Correlation matrix (p × p) or NULL
+#' @param correlation_source Source of correlation structure ("empirical", "ar1", "block")
 #' @param correlation_scale Scaling factor for off-diagonal correlations
 #' @param missing_rate Proportion of missing values to introduce
 #' @param missing_mechanism "MCAR" or "MNAR"
@@ -62,7 +63,8 @@ emp_params <- load_result(file.path(params_dir, "empirical_params.rds"))$data
 #' @return List: X, y, true_features, params
 simulate_dataset <- function(n_case, n_control, p, p_true,
                              fc = 1.5, fc_distribution = "fixed",
-                             cor_matrix = NULL, correlation_scale = 1.0,
+                             cor_matrix = NULL, correlation_source = "empirical",
+                             correlation_scale = 1.0,
                              missing_rate = 0.05, missing_mechanism = "MNAR",
                              preprocessing = "log_auto",
                              n_confounders = 0, n_interactions = 0,
@@ -74,8 +76,23 @@ simulate_dataset <- function(n_case, n_control, p, p_true,
 
   # --- Step 1: Correlation matrix -------------------------------------------
   if (is.null(cor_matrix) || ncol(cor_matrix) != p) {
-    # Build block-diagonal correlation from empirical if size mismatch
-    cor_matrix <- build_correlation_matrix(p, emp_params, correlation_scale)
+    if (identical(correlation_source, "ar1")) {
+      rho <- 0.3 * correlation_scale
+      cor_matrix <- rho^abs(outer(seq_len(p), seq_len(p), "-"))
+    } else if (identical(correlation_source, "block")) {
+      block_size <- min(50L, p)
+      rho <- 0.3 * correlation_scale
+      cor_matrix <- diag(1, p)
+      for (block_start in seq(1, p, by = block_size)) {
+        block_end <- min(block_start + block_size - 1L, p)
+        block_idx <- block_start:block_end
+        block_cor <- matrix(rho, nrow = length(block_idx), ncol = length(block_idx))
+        diag(block_cor) <- 1
+        cor_matrix[block_idx, block_idx] <- block_cor
+      }
+    } else {
+      cor_matrix <- build_correlation_matrix(p, emp_params, correlation_scale)
+    }
   } else {
     # Scale off-diagonal elements
     if (correlation_scale != 1.0) {
@@ -201,6 +218,7 @@ simulate_dataset <- function(n_case, n_control, p, p_true,
     params = list(
       n_case = n_case, n_control = n_control, p = p, p_true = p_true,
       fc = fc, fc_distribution = fc_distribution,
+      correlation_source = correlation_source,
       correlation_scale = correlation_scale,
       missing_rate = missing_rate, missing_mechanism = missing_mechanism,
       preprocessing = preprocessing,
@@ -353,6 +371,7 @@ if (length(tasks) > 0) {
         fc = sp$fc,
         fc_distribution = sp$fc_distribution,
         cor_matrix = NULL,
+        correlation_source = sp$correlation_source,
         correlation_scale = sp$correlation_scale,
         missing_rate = sp$missing_rate,
         missing_mechanism = sp$missing_mechanism,

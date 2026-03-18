@@ -1,6 +1,6 @@
 # Piano Computazionale
 
-> Ultimo aggiornamento: 2026-03-17
+> Ultimo aggiornamento: 2026-03-18
 > Status: DRAFT
 
 ---
@@ -105,6 +105,8 @@ Con 64 core (HPC cluster):
 ## 4. Parallelizzazione in R
 
 ### Framework raccomandato: `future` + `furrr`
+
+**Nota (2026-03-18):** `setup_parallel()` in `helpers.R` impone un cap di 100 workers per evitare esaurimento risorse su macchine ad alto core count.
 
 ```r
 library(future)

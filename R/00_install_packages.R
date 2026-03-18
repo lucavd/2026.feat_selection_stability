@@ -12,7 +12,7 @@ cat("Start time:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
 cran_packages <- c(
 
   # Core infrastructure
-  "here", "yaml", "cli", "fs", "withr",
+  "here", "yaml", "cli", "fs", "withr", "digest",
   # Data manipulation
 
   "data.table", "dplyr", "tidyr", "purrr", "tibble", "readr", "stringr",

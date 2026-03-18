@@ -33,6 +33,40 @@ successful <- names(manifest)[vapply(manifest, function(m) m$status == "success"
 
 cli::cli_alert_info("{length(successful)} datasets available for preprocessing")
 
+get_matching_colnames <- function(df, pattern) {
+  idx <- grep(pattern, tolower(names(df)))
+  if (length(idx) == 0) {
+    character(0)
+  } else {
+    names(df)[idx]
+  }
+}
+
+align_sample_info <- function(sample_info, sample_ids) {
+  if (is.null(sample_info) || length(sample_ids) == 0) {
+    return(list(sample_info = sample_info,
+                matched = rep(NA_integer_, length(sample_ids))))
+  }
+
+  id_cols <- get_matching_colnames(
+    sample_info,
+    "sample[ _]?name|sample[ _]?id|subject[ _]?id|specimen[ _]?id|participant[ _]?id|sample"
+  )
+
+  if (length(id_cols) > 0) {
+    matched <- match(sample_ids, as.character(sample_info[[id_cols[1]]]))
+    if (sum(!is.na(matched)) > 0) {
+      return(list(sample_info = sample_info[matched, , drop = FALSE],
+                  matched = matched))
+    }
+  }
+
+  cli::cli_alert_warning("Unable to align sample metadata by ID; class labels will be set to NA for this dataset")
+
+  list(sample_info = sample_info,
+       matched = rep(NA_integer_, length(sample_ids)))
+}
+
 # ==============================================================================
 # Parsing functions
 # ==============================================================================
@@ -68,7 +102,6 @@ parse_metabolights <- function(acc_id, raw_dir) {
                  "reliability", "uri", "search_engine", "search_engine_score",
                  "smallmolecule_abundance_sub", "smallmolecule_abundance_stdev_sub",
                  "smallmolecule_abundance_std_error_sub")
-  meta_cols_present <- intersect(tolower(names(maf)), tolower(meta_cols))
 
   # Sample columns = all columns that are NOT metadata
   all_cols <- names(maf)
@@ -89,7 +122,7 @@ parse_metabolights <- function(acc_id, raw_dir) {
   }
 
   # Build feature matrix (samples × features)
-  X <- t(as.matrix(maf[, ..data_cols]))
+  X <- t(as.matrix(maf[, data_cols, with = FALSE]))
   X <- apply(X, 2, as.numeric)
 
   # Feature names from metabolite_identification or row index
@@ -106,18 +139,16 @@ parse_metabolights <- function(acc_id, raw_dir) {
   sample_info <- NULL
   if (length(sample_files) > 0) {
     samp <- data.table::fread(sample_files[1], header = TRUE, check.names = FALSE)
-    # Look for factor/class columns
-    factor_cols <- grep("factor|group|class|disease|condition|diagnosis|status",
-                        tolower(names(samp)), value = TRUE)
+    factor_cols <- get_matching_colnames(
+      samp,
+      "factor|group|class|disease|condition|diagnosis|status"
+    )
     if (length(factor_cols) > 0) {
-      sample_info <- samp
-      # Match sample IDs between MAF data columns and sample sheet
-      if ("Sample Name" %in% names(samp)) {
-        matched <- match(rownames(X), samp[["Sample Name"]])
-        if (sum(!is.na(matched)) > 0) {
-          y_raw <- samp[[factor_cols[1]]][matched]
-          y <- as.character(y_raw)
-        }
+      aligned <- align_sample_info(samp, rownames(X))
+      sample_info <- aligned$sample_info
+      if (sum(!is.na(aligned$matched)) > 0) {
+        y_raw <- sample_info[[factor_cols[1]]]
+        y <- as.character(y_raw)
       }
     }
   }
@@ -199,12 +230,14 @@ parse_mw <- function(acc_id, raw_dir) {
       error = function(e) NULL
     )
     if (!is.null(factors_json) && is.data.frame(factors_json)) {
-      sample_info <- factors_json
-      # Look for class column
-      class_cols <- grep("factor|group|class|disease|condition",
-                         tolower(names(factors_json)), value = TRUE)
-      if (length(class_cols) > 0) {
-        y <- as.character(factors_json[[class_cols[1]]])
+      class_cols <- get_matching_colnames(
+        factors_json,
+        "factor|group|class|disease|condition|diagnosis|status"
+      )
+      aligned <- align_sample_info(factors_json, rownames(X))
+      sample_info <- aligned$sample_info
+      if (length(class_cols) > 0 && sum(!is.na(aligned$matched)) > 0) {
+        y <- as.character(sample_info[[class_cols[1]]])
       }
     }
   }
@@ -237,6 +270,9 @@ apply_qc_filters <- function(dat, config) {
   feat_miss <- colMeans(is.na(X))
   keep_feat <- feat_miss <= ac$max_missing_rate_feature
   X <- X[, keep_feat, drop = FALSE]
+  if (!is.null(dat$feature_info) && nrow(dat$feature_info) == length(keep_feat)) {
+    dat$feature_info <- dat$feature_info[keep_feat, , drop = FALSE]
+  }
   cli::cli_alert_info("Features: {p_orig} → {ncol(X)} (removed {sum(!keep_feat)} with >{ac$max_missing_rate_feature*100}% missing)")
 
   # Step 2: Remove samples with too many missing values
@@ -244,6 +280,9 @@ apply_qc_filters <- function(dat, config) {
   keep_samp <- samp_miss <= ac$max_missing_rate_sample
   X <- X[keep_samp, , drop = FALSE]
   if (!is.null(y)) y <- y[keep_samp]
+  if (!is.null(dat$sample_info) && nrow(dat$sample_info) == length(keep_samp)) {
+    dat$sample_info <- dat$sample_info[keep_samp, , drop = FALSE]
+  }
   cli::cli_alert_info("Samples: {n_orig} → {nrow(X)} (removed {sum(!keep_samp)} with >{ac$max_missing_rate_sample*100}% missing)")
 
   # Step 3: Check minimum features
@@ -256,6 +295,9 @@ apply_qc_filters <- function(dat, config) {
   feat_var <- apply(X, 2, var, na.rm = TRUE)
   keep_var <- !is.na(feat_var) & feat_var > 1e-10
   X <- X[, keep_var, drop = FALSE]
+  if (!is.null(dat$feature_info) && nrow(dat$feature_info) == length(keep_var)) {
+    dat$feature_info <- dat$feature_info[keep_var, , drop = FALSE]
+  }
   cli::cli_alert_info("After zero-variance filter: {ncol(X)} features")
 
   dat$X <- X
@@ -412,6 +454,10 @@ for (acc_id in successful) {
   valid_idx <- !is.na(class_result$y_binary)
   X <- filtered$X[valid_idx, , drop = FALSE]
   y <- class_result$y_binary[valid_idx]
+  sample_info <- filtered$sample_info
+  if (!is.null(sample_info) && nrow(sample_info) == length(valid_idx)) {
+    sample_info <- sample_info[valid_idx, , drop = FALSE]
+  }
 
   # Check minimum samples per group
   tab <- table(y)
@@ -422,6 +468,7 @@ for (acc_id in successful) {
   }
 
   # Impute
+  X_pre_impute <- X
   X <- impute_missing(X)
 
   # Normalize (using default preprocessing for now; Script 04 will vary this)
@@ -433,11 +480,12 @@ for (acc_id in successful) {
   # Save
   processed <- list(
     X = X_norm,
-    X_raw = X,
+    X_raw = X_pre_impute,
+    X_imputed = X,
     y = y,
     class_map = class_result$class_map,
     feature_info = filtered$feature_info,
-    sample_info = filtered$sample_info,
+    sample_info = sample_info,
     source = info$source,
     platform = info$platform,
     accession = acc_id,

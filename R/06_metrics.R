@@ -68,24 +68,47 @@ compute_accuracy_metrics <- function(selected, true_features) {
 #' @param X Matrix (n × p)
 #' @param y Binary response
 #' @param selected Logical vector of selected features
+#' @param feature_priority Optional numeric vector used to rank selected features
 #' @param test_fraction Fraction for test set
 #' @param seed Random seed
 #' @return AUC value
-compute_prediction_metrics <- function(X, y, selected, test_fraction = 0.3, seed = 42) {
+compute_prediction_metrics <- function(X, y, selected,
+                                       feature_priority = NULL,
+                                       test_fraction = 0.3,
+                                       seed = 42) {
   result <- list(auc = NA_real_, balanced_accuracy = NA_real_)
   if (sum(selected) == 0) return(result)
+  if (length(unique(y)) < 2) return(result)
   if (sum(selected) > nrow(X) - 5) {
-    # More features than useful for logistic regression
-    # Use only top features
-    selected[selected] <- FALSE
-    selected[seq_len(min(nrow(X) %/% 3, sum(selected)))] <- TRUE
+    selected_idx <- which(selected)
+    n_keep <- max(1L, min(length(selected_idx), nrow(X) %/% 3))
+    if (!is.null(feature_priority) && length(feature_priority) == length(selected)) {
+      pri <- feature_priority[selected_idx]
+      if (all(is.na(pri))) {
+        keep_idx <- selected_idx[seq_len(n_keep)]
+      } else {
+        pri[is.na(pri)] <- -Inf
+        keep_idx <- selected_idx[order(pri, decreasing = TRUE)][seq_len(n_keep)]
+      }
+    } else {
+      keep_idx <- selected_idx[seq_len(n_keep)]
+    }
+    selected <- rep(FALSE, length(selected))
+    selected[keep_idx] <- TRUE
     if (sum(selected) == 0) return(result)
   }
 
   set.seed(seed)
   n <- nrow(X)
-  test_idx <- sample(n, round(n * test_fraction))
+  class_indices <- split(seq_len(n), y)
+  if (any(vapply(class_indices, length, integer(1)) < 2L)) return(result)
+  test_idx <- unlist(lapply(class_indices, function(idx) {
+    n_test <- round(length(idx) * test_fraction)
+    n_test <- max(1L, min(length(idx) - 1L, n_test))
+    sample(idx, n_test)
+  }), use.names = FALSE)
   train_idx <- setdiff(seq_len(n), test_idx)
+  if (length(train_idx) == 0 || length(test_idx) == 0) return(result)
 
   X_sel <- X[, selected, drop = FALSE]
 
@@ -123,13 +146,7 @@ setup_parallel(config)
 
 # Group FS files by task_id (dataset) to aggregate across methods
 # Parse file names: fs_<scenario>_<level>_rep<r>_<method>.rds
-parse_fs_filename <- function(fname) {
-  base <- gsub("^fs_|\\.rds$", "", basename(fname))
-  # Last segment after _ is method name
-  # But method names can contain underscores (e.g., "wilcoxon_fdr")
-  # Load file to get metadata instead
-  NULL
-}
+parse_fs_filename <- function(fname) NULL
 
 all_metrics <- furrr::future_map(fs_files, function(fpath) {
   tryCatch({
@@ -191,9 +208,16 @@ all_metrics <- furrr::future_map(fs_files, function(fpath) {
     sim_file <- file.path(sim_dir, paste0("sim_", task_id, ".rds"))
     pred_metrics <- list(auc = NA_real_, balanced_accuracy = NA_real_)
     if (file.exists(sim_file) && sum(stably_50) > 0) {
+      feature_priority <- selection_freq
+      if (!is.null(imp_mat)) {
+        imp_abs <- abs(imp_mat)
+        imp_abs[is.na(imp_abs)] <- 0
+        feature_priority <- colMeans(imp_abs)
+      }
       sim_data <- readRDS(sim_file)
       pred_metrics <- compute_prediction_metrics(
         sim_data$X, sim_data$y, stably_50,
+        feature_priority = feature_priority,
         test_fraction = config$metrics$prediction$test_fraction,
         seed = derive_seed(config$project$seed, paste0("auc_", task_id, "_", method))
       )
@@ -288,6 +312,10 @@ if (nrow(metrics_dt[metrics_dt$status == "success", ]) > 0) {
     n_reps = .N,
     total_time = sum(total_time, na.rm = TRUE)
   ), by = .(scenario, level, method, category)]
+
+  save_result(summary_dt,
+              file.path(metrics_dir, "metrics_by_scenario.rds"),
+              metadata = list(script = "06_metrics.R"))
 
   save_result(summary_dt,
               file.path(metrics_dir, "metrics_summary.rds"),
