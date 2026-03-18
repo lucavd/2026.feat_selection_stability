@@ -1,0 +1,105 @@
+R version 4.5.2 (2025-10-31)
+Platform: x86_64-pc-linux-gnu
+Running under: Ubuntu 24.04.4 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+
+locale:
+ [1] LC_CTYPE=en_GB.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_GB.UTF-8        LC_COLLATE=en_GB.UTF-8    
+ [5] LC_MONETARY=en_GB.UTF-8    LC_MESSAGES=en_GB.UTF-8   
+ [7] LC_PAPER=en_GB.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_GB.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Europe/Rome
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+  [1] splines_4.5.2                 palmerpenguins_0.1.1         
+  [3] tibble_3.3.0                  hardhat_1.4.2                
+  [5] pROC_1.19.0.1                 rpart_4.1.24                 
+  [7] lifecycle_1.0.5               Rdpack_2.6.4                 
+  [9] doParallel_1.0.17             rprojroot_2.1.1              
+ [11] globals_0.18.0                lattice_0.22-9               
+ [13] MASS_7.3-65                   MultiAssayExperiment_1.36.1  
+ [15] backports_1.5.0               magrittr_2.0.4               
+ [17] vcd_1.4-13                    rmarkdown_2.30               
+ [19] yaml_2.3.10                   remotes_2.5.0                
+ [21] doRNG_1.8.6.3                 sp_2.2-1                     
+ [23] RColorBrewer_1.1-3            lubridate_1.9.4              
+ [25] abind_1.4-8                   GenomicRanges_1.62.1         
+ [27] purrr_1.2.0                   BiocGenerics_0.56.0          
+ [29] mlr3misc_0.21.0               itertools_0.1-3              
+ [31] nnet_7.3-20                   ipred_0.9-15                 
+ [33] circlize_0.4.17               paradox_1.0.1                
+ [35] lava_1.8.2                    IRanges_2.44.0               
+ [37] S4Vectors_0.48.0              ggrepel_0.9.8                
+ [39] struct_1.22.1                 listenv_0.10.0               
+ [41] mlr3learners_0.14.0           stabm_1.2.2                  
+ [43] missForest_1.6.1              parallelly_1.45.1            
+ [45] codetools_0.2-20              DelayedArray_0.36.0          
+ [47] stabs_0.7-1                   shapviz_0.10.3               
+ [49] tidyselect_1.2.1              shape_1.4.6.1                
+ [51] metabolomicsWorkbenchR_1.20.0 farver_2.1.2                 
+ [53] viridis_0.6.5                 matrixStats_1.5.0            
+ [55] stats4_4.5.2                  Seqinfo_1.0.0                
+ [57] jsonlite_2.0.0                caret_7.0-1                  
+ [59] GetoptLong_1.1.0              e1071_1.7-17                 
+ [61] progressr_0.18.0              Formula_1.2-5                
+ [63] survival_3.8-6                iterators_1.0.14             
+ [65] foreach_1.5.2                 tools_4.5.2                  
+ [67] bbotk_1.9.0                   Rcpp_1.1.0                   
+ [69] glue_1.8.0                    prodlim_2026.03.11           
+ [71] gridExtra_2.3                 SparseArray_1.10.9           
+ [73] BiocBaseUtils_1.12.0          laeken_0.5.3                 
+ [75] xfun_0.56                     ranger_0.18.0                
+ [77] here_1.0.2                    MatrixGenerics_1.22.0        
+ [79] dplyr_1.1.4                   mlr3_1.5.0                   
+ [81] withr_3.0.2                   BiocManager_1.30.27          
+ [83] fastmap_1.2.0                 boot_1.3-32                  
+ [85] VIM_7.0.0                     digest_0.6.39                
+ [87] timechange_0.3.0              R6_2.6.1                     
+ [89] mlr3tuning_1.6.0              colorspace_2.1-2             
+ [91] dichromat_2.0-0.1             tidyr_1.3.1                  
+ [93] generics_0.1.4                data.table_1.17.8            
+ [95] recipes_1.3.1                 corpcor_1.6.10               
+ [97] robustbase_0.99-7             class_7.3-23                 
+ [99] httr_1.4.7                    S4Arrays_1.10.1              
+[101] ontologyIndex_2.12            ModelMetrics_1.2.2.2         
+[103] pkgconfig_2.0.3               gtable_0.3.6                 
+[105] timeDate_4051.111             mlr3pipelines_0.11.0         
+[107] ComplexHeatmap_2.26.1         metabolighteR_0.1.4          
+[109] lmtest_0.9-40                 S7_0.2.1                     
+[111] XVector_0.50.0                furrr_0.3.1                  
+[113] htmltools_0.5.8.1             carData_3.0-6                
+[115] clue_0.3-67                   scales_1.4.0                 
+[117] Biobase_2.70.0                png_0.1-9                    
+[119] gower_1.0.2                   lgr_0.5.2                    
+[121] Boruta_9.0.0                  knitr_1.50                   
+[123] rjson_0.2.23                  tzdb_0.5.0                   
+[125] reshape2_1.4.5                uuid_1.2-1                   
+[127] checkmate_2.3.4               nlme_3.1-168                 
+[129] curl_7.0.0                    GlobalOptions_0.1.3          
+[131] proxy_0.4-29                  zoo_1.8-15                   
+[133] stringr_1.6.0                 parallel_4.5.2               
+[135] pillar_1.11.1                 grid_4.5.2                   
+[137] vctrs_0.6.5                   randomForest_4.7-1.2         
+[139] car_3.1-5                     cluster_2.1.8.2              
+[141] evaluate_1.0.5                readr_2.1.6                  
+[143] mvtnorm_1.3-3                 cli_3.6.5                    
+[145] compiler_4.5.2                rlang_1.1.7                  
+[147] crayon_1.5.3                  rngtools_1.5.2               
+[149] future.apply_1.20.1           plyr_1.8.9                   
+[151] fs_1.6.7                      stringi_1.8.7                
+[153] viridisLite_0.4.2             glmnet_4.1-10                
+[155] Matrix_1.7-4                  spikeslab_1.1.6              
+[157] hms_1.1.4                     patchwork_1.3.2              
+[159] future_1.68.0                 ggplot2_4.0.1                
+[161] SummarizedExperiment_1.40.0   rbibutils_2.4                
+[163] DEoptimR_1.1-4                xgboost_3.2.1.1              

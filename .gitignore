@@ -50,3 +50,7 @@ results/checkpoints/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local secrets
+.env
+!.env.example

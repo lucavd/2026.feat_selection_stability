@@ -8,6 +8,17 @@
 cat("=== Script 00: Installing packages ===\n")
 cat("Start time:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
 
+# Workaround for toolchain/include mismatch seen on some Linux builds (Rdsdp)
+r_include <- "/usr/share/R/include"
+if (dir.exists(r_include)) {
+  cpath <- Sys.getenv("CPATH", unset = "")
+  parts <- if (nzchar(cpath)) strsplit(cpath, ":", fixed = TRUE)[[1]] else character(0)
+  if (!(r_include %in% parts)) {
+    Sys.setenv(CPATH = paste(c(r_include, cpath), collapse = ":"))
+    cli::cli_alert_info("Set CPATH to include {r_include} for package compilation")
+  }
+}
+
 # --- CRAN packages -----------------------------------------------------------
 cran_packages <- c(
 
@@ -31,7 +42,6 @@ cran_packages <- c(
   "stabm", "pROC", "caret",
   # Visualization
   "ggplot2", "patchwork", "scales", "viridis", "ggrepel",
-  "ComplexHeatmap",
   # SHAP
   "shapviz", "treeshap",
   # Imputation
@@ -44,6 +54,7 @@ cran_packages <- c(
 
 # --- Bioconductor packages ---------------------------------------------------
 bioc_packages <- c(
+  "ComplexHeatmap",
   "metabolomicsWorkbenchR",
   "SummarizedExperiment",
   "Biobase"
@@ -140,6 +151,7 @@ if (n_fail > 0) {
 
 # --- Session info -------------------------------------------------------------
 cli::cli_h1("Session Info")
+fs::dir_create(here::here("results"))
 writeLines(capture.output(sessionInfo()),
            here::here("results", "session_info_00.txt"))
 cli::cli_alert_success("Session info saved to results/session_info_00.txt")
