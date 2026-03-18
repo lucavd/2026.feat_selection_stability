@@ -32,55 +32,73 @@ paths:
 # scaricabili e che soddisfano i criteri (caso-controllo, >=30/gruppo, feature table).
 
 datasets:
+  # --- CIMCB benchmark datasets (Mendez et al. 2019, Metabolomics 15:150) -----
+  # Pre-processed Excel files from https://github.com/CIMCB/MetabComparisonBinaryML
+  # Format: Sheet "Data" with SampleID, Class (0/1), M1..Mn columns
+  #         Sheet "Peak" with metabolite names
+  cimcb:
+    github_base: "https://raw.githubusercontent.com/CIMCB/MetabComparisonBinaryML/master/notebooks/data"
+    accessions:
+      # NMR
+      - id: "ST001047"
+        platform: "NMR"
+        description: "Gastric cancer vs control — urine NMR"
+        expected_n: 83
+        classes: ["GC", "HE"]     # GC=gastric cancer, HE=healthy
+      # LC-MS
+      - id: "MTBLS404"
+        platform: "LC-MS"
+        description: "Sacurine — urine LC-MS (Male vs Female)"
+        expected_n: 184
+        classes: [0, 1]
+      - id: "ST001000"
+        platform: "LC-MS"
+        description: "IBD — UC vs CD stool LC-MS"
+        expected_n: 121
+        classes: [0, 1]
+      - id: "MTBLS136"
+        platform: "LC-MS"
+        description: "Hormone use — serum LC-MS (E-only vs E+P)"
+        expected_n: 668
+        classes: [0, 1]           # 0=E-only, 1=E+P (exclude nonuser=2, other=3)
+      - id: "MTBLS92"
+        platform: "LC-MS"
+        description: "Breast cancer pre- vs post-chemo — plasma LC-MS"
+        expected_n: 253
+        classes: [0, 1]
+      # GC-MS
+      - id: "ST000369"
+        platform: "GC-MS"
+        description: "Lung adenocarcinoma vs control — serum GC-MS"
+        expected_n: 80
+        classes: [0, 1]
+        sample_filter: "Class"    # exclude NA (QC samples)
+      - id: "ST000496"
+        platform: "GC-MS"
+        description: "Periodontal disease pre- vs post-debridement — saliva GC-MS"
+        expected_n: 100
+        classes: [0, 1]
+
+  # --- Direct repository downloads (not in CIMCB) -----------------------------
   metabolights:
     api_base: "https://www.ebi.ac.uk/metabolights/ws"
     ftp_base: "ftp://ftp.ebi.ac.uk/pub/databases/metabolights/studies/public"
     accessions:
-      # NMR datasets
-      - id: "MTBLS1"
-        platform: "NMR"
-        description: "Type 2 Diabetes — urine NMR"
-        expected_n: 200
-      - id: "MTBLS97"
-        platform: "NMR"
-        description: "Lung cancer — serum NMR"
-        expected_n: 80
-      # LC-MS datasets
-      - id: "MTBLS136"
+      - id: "MTBLS28"
         platform: "LC-MS"
-        description: "Colorectal cancer — serum LC-MS"
-        expected_n: 120
-      - id: "MTBLS352"
-        platform: "LC-MS"
-        description: "Chronic kidney disease — plasma LC-MS"
-        expected_n: 100
-      - id: "MTBLS537"
-        platform: "LC-MS"
-        description: "Hepatocellular carcinoma — serum LC-MS"
-        expected_n: 80
-      # Benchmark con ground truth
-      - id: "MTBLS733"
-        platform: "LC-MS"
-        description: "Benchmark spike-in — Piper nigrum standard mixtures"
-        expected_n: 10
-        is_benchmark: true
-        n_true_features: 130
+        description: "NSCLC vs control — urine LC-MS"
+        expected_n: 1005
+        class_column: "Factor Value[Sample Type]"
+      # MTBLS374 excluded: MAF has only 3 features (NMR bins not in MAF)
+      # Could be added back with reprocessed data from rDolphin pipeline
 
   metabolomics_workbench:
     api_base: "https://www.metabolomicsworkbench.org/rest"
     accessions:
-      - id: "ST000388"
-        platform: "LC-MS"
-        description: "Type 2 Diabetes — plasma lipidomics"
-        expected_n: 100
-      - id: "ST001047"
-        platform: "LC-MS"
-        description: "Colorectal cancer — serum metabolomics"
-        expected_n: 80
-      - id: "ST001386"
+      - id: "ST001706"
         platform: "NMR"
-        description: "Cardiovascular disease — serum NMR"
-        expected_n: 120
+        description: "Renal cell carcinoma vs control — urine NMR"
+        expected_n: 284
 
   download:
     timeout_seconds: 120

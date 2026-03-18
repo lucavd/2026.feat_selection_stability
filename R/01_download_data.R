@@ -28,6 +28,69 @@ raw_dir <- get_path(config, "raw_data")
 manifest <- list()
 
 # ==============================================================================
+# CIMCB benchmark downloads (Mendez et al. 2019)
+# ==============================================================================
+
+cli::cli_h1("CIMCB benchmark datasets")
+
+download_cimcb <- function(accession_info, config) {
+  acc_id   <- accession_info$id
+  platform <- accession_info$platform
+  desc     <- accession_info$description
+
+  cli::cli_h2("{acc_id} — {desc} ({platform})")
+
+  out_dir <- file.path(raw_dir, acc_id)
+  fs::dir_create(out_dir)
+
+  result <- list(
+    id = acc_id, source = "CIMCB", platform = platform,
+    description = desc, status = "pending",
+    timestamp = Sys.time(), files = character(0)
+  )
+
+  tryCatch({
+    github_base <- config$datasets$cimcb$github_base
+    xlsx_url <- paste0(github_base, "/", acc_id, ".xlsx")
+    local_file <- file.path(out_dir, paste0(acc_id, ".xlsx"))
+
+    cli::cli_alert_info("Downloading from CIMCB GitHub...")
+    for (attempt in seq_len(config$datasets$download$max_retries)) {
+      dl_ok <- tryCatch({
+        download.file(xlsx_url, local_file, mode = "wb", quiet = TRUE,
+                      timeout = config$datasets$download$timeout_seconds)
+        file.exists(local_file) && file.size(local_file) > 1000
+      }, error = function(e) {
+        if (attempt < config$datasets$download$max_retries) {
+          Sys.sleep(config$datasets$download$retry_backoff_seconds * attempt)
+        }
+        FALSE
+      })
+      if (dl_ok) break
+    }
+
+    if (dl_ok) {
+      result$files  <- basename(local_file)
+      result$status <- "success"
+      cli::cli_alert_success("{acc_id}: downloaded ({round(file.size(local_file)/1024)} KB)")
+    } else {
+      result$status <- "no_files"
+      cli::cli_alert_warning("{acc_id}: download failed")
+    }
+  }, error = function(e) {
+    result$status  <<- "error"
+    result$message <<- e$message
+    cli::cli_alert_danger("{acc_id}: {e$message}")
+  })
+
+  result
+}
+
+for (acc_info in config$datasets$cimcb$accessions) {
+  manifest[[acc_info$id]] <- download_cimcb(acc_info, config)
+}
+
+# ==============================================================================
 # MetaboLights downloads
 # ==============================================================================
 

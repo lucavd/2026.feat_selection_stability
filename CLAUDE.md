@@ -19,7 +19,7 @@ Target journal: Briefings in Bioinformatics / Metabolomics / Analytical Chemistr
 ```
 config/config.yaml          — UNICO punto di configurazione
 R/00_install_packages.R     — Installazione dipendenze
-R/01_download_data.R        — Download dataset MetaboLights + MW
+R/01_download_data.R        — Download dataset CIMCB + MetaboLights + MW
 R/02_preprocess.R           — Preprocessing e armonizzazione
 R/03_extract_empirical_params.R — Parametri empirici da dati reali
 R/04_simulate.R             — Framework simulazione
@@ -69,6 +69,7 @@ Script 07 (cross-validation su dati reali) è indipendente da 04-06 (simulazione
 | Parallelizzazione | `future` + `furrr` | CRAN |
 | MetaboLights API | `metabolighteR` | CRAN |
 | MW API | `metabolomicsWorkbenchR` | Bioconductor |
+| CIMCB Excel | `readxl` | CRAN |
 
 ## Stime computazionali
 

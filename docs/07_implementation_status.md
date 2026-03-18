@@ -11,8 +11,8 @@
 |------|--------|---------|-------------|
 | `config/config.yaml` | ✅ | ✅ | Configurazione centrale unica |
 | `R/00_install_packages.R` | ✅ | ✅ | 49 pacchetti (aggiunto `digest`); 3 da fonti alternative |
-| `R/01_download_data.R` | ✅ | ✅ | MTBLS1 scaricato con successo; altri falliti per DNS locale |
-| `R/02_preprocess.R` | ✅ | — | Parsing MAF/JSON, QC, imputazione mediana, normalizzazione. Matching sample-metadata robusto (`align_sample_info`). Output include `X_raw` + `X_imputed` |
+| `R/01_download_data.R` | ✅ | ✅ | Download da 3 fonti: CIMCB GitHub (Excel), MetaboLights (FTP/API), MW (REST). 9/10 scaricati |
+| `R/02_preprocess.R` | ✅ | ✅ | Parser CIMCB (Excel), MetaboLights (MAF), MW (nested JSON). QC, imputazione mediana, normalizzazione. 9 dataset processati |
 | `R/03_extract_empirical_params.R` | ✅ | — | Correlazione Ledoit-Wolf, distribuzioni, eigenvalues |
 | `R/04_simulate.R` | ✅ | — | MVN → exp → FC + confounders + interazioni + MNAR missing. Supporta `correlation_source`: empirical, ar1, block |
 | `R/05_feature_selection.R` | ✅ | — | 12 metodi × 100 bootstrap, checkpointing, parallelizzato |
@@ -25,39 +25,52 @@
 
 ---
 
-## 2. Risultati Test Locale (2026-03-17)
+## 2. Risultati Esecuzione (2026-03-18)
 
 ### 2.1 Script 00 — Installazione pacchetti
 
-- **49/49 pacchetti installati con successo** (aggiunto `digest` per hashing)
-- 3 pacchetti richiesti installazione da fonti alternative:
-  - `horseshoe` → CRAN archive (v0.2.0)
-  - `ComplexHeatmap` → Bioconductor
-  - `treeshap` → GitHub (ModelOriented/treeshap)
-- Tempo: ~30 secondi
+- **49/49 pacchetti installati con successo** (aggiunto `digest`, `readxl`)
+- Installazioni non standard: `horseshoe` (CRAN archive), `ComplexHeatmap` (Bioconductor), `treeshap` (GitHub), `knockoff` (richiede `Rdsdp` compilato manualmente)
+- Tempo: ~36 secondi
 
 ### 2.2 Script 01 — Download dati
 
 | Dataset | Source | Status | Note |
 |---------|--------|--------|------|
-| MTBLS1 | MetaboLights | ✅ Success | 3 file (MAF, sample sheet, assay). T2D urine NMR |
-| MTBLS97 | MetaboLights | ⚠️ 403 Forbidden | API bloccata; FTP fallito; ISA-Tab non disponibile |
-| MTBLS136 | MetaboLights | ❌ DNS error | Non risolvibile da macchina locale |
-| MTBLS352 | MetaboLights | ❌ DNS error | Idem |
-| MTBLS537 | MetaboLights | ❌ DNS error | Idem |
-| MTBLS733 | MetaboLights | ❌ DNS error | Benchmark spike-in — prioritario |
-| ST000388 | MW | ❌ DNS error | T2D plasma lipidomics |
-| ST001047 | MW | ❌ DNS error | CRC serum |
-| ST001386 | MW | ❌ DNS error | CVD serum NMR |
+| ST001047 | CIMCB GitHub | ✅ | 151 KB Excel — Gastric cancer NMR |
+| MTBLS404 | CIMCB GitHub | ✅ | 223 KB Excel — Sacurine LC-MS |
+| ST001000 | CIMCB GitHub | ✅ | 7.6 MB Excel — IBD LC-MS |
+| MTBLS136 | CIMCB GitHub | ✅ | 11.6 MB Excel — Hormone use LC-MS |
+| MTBLS92 | CIMCB GitHub | ✅ | 675 KB Excel — Breast cancer LC-MS |
+| ST000369 | CIMCB GitHub | ✅ | 206 KB Excel — Lung cancer GC-MS |
+| ST000496 | CIMCB GitHub | ✅ | 92 KB Excel — Periodontal GC-MS |
+| MTBLS28 | MetaboLights | ✅ | 5 files (2 MAF NEG/POS, sample sheet, 2 assays) |
+| MTBLS374 | MetaboLights | ✅ | 5 files scaricati ma MAF con solo 3 features |
+| ST001706 | MW REST API | ✅ | 3 files (data JSON, factors JSON, metabolites) |
 
-**Causa dei fallimenti:** DNS locale non risolveva host esterni. Su server con connessione internet completa questi errori non si presenteranno.
+**10/10 scaricati. MTBLS374 escluso in fase di preprocessing (MAF non contiene dati numerici).**
 
-**MTBLS97 (403):** Potrebbe essere uno studio con accesso limitato. Da verificare sul server — se persiste, sostituire con altro dataset NMR.
+### 2.3 Script 02 — Preprocessing
 
-### 2.3 Tempi misurati
+| Dataset | n | p | Classi | Missing % |
+|---------|--:|---:|--------|-----------|
+| ST001047 | 83 | 149 | GC(43)/HE(40) | 5.6% |
+| MTBLS404 | 184 | 120 | M(101)/F(83) | 0% |
+| ST001000 | 107 | 1533 | UC(58)/CD(49) | 20.2% |
+| MTBLS136 | 668 | 787 | E-only(331)/E+P(337) | 6% |
+| MTBLS92 | 253 | 138 | Pre(142)/Post(111) | 0% |
+| ST000369 | 80 | 181 | Cancer(49)/Ctrl(31) | 0.1% |
+| ST000496 | 100 | 69 | Pre(50)/Post(50) | 0% |
+| MTBLS28 | 1005 | 1359 | Control(536)/Case(469) | 0% |
+| ST001706 | 256 | 50 | Control(174)/RCC(82) | 0% |
 
-- Script 00: ~30 secondi
-- Script 01: ~52 minuti (dominato da timeout su host non raggiungibili — su server sarà ~5-10 min)
+**9/10 processati con successo. Tempo totale: ~5 secondi.**
+
+### 2.4 Tempi misurati
+
+- Script 00: ~36 secondi
+- Script 01: ~21 secondi (CIMCB download veloce, MetaboLights FTP OK, MW API OK)
+- Script 02: ~5 secondi
 
 ---
 
@@ -117,7 +130,14 @@ Implementate tutte e 4 le opzioni previste:
 - Direzioni up/down randomizzate per realismo
 - **Nota equivalenza:** FC moltiplicativo su scala originale = shift additivo in scala log. La struttura di correlazione è preservata perché il segnale è impiantato dopo la trasformazione.
 
-### 3.6 Metriche di stabilità — Nogueira index
+### 3.7 Sorgenti dati (2026-03-18)
+
+- **Design originale:** 6 MetaboLights + 3 MW, download diretto da API
+- **Implementato:** 7 CIMCB benchmark (Excel pre-processati) + 1 MetaboLights (MAF) + 1 MW (REST JSON)
+- **Motivazione:** Le API MetaboLights e MW restituiscono formati variabili e spesso incompleti. Il repository CIMCB di Mendez et al. (2019) fornisce dati validati in benchmark pubblicati. MTBLS28 (il più grande) scaricato direttamente da MetaboLights MAF. ST001706 scaricato via MW REST API per coprire NMR.
+- **Riferimento:** Mendez, Reinke & Broadhurst (2019), *Metabolomics* 15:150
+
+### 3.8 Metriche di stabilità — Nogueira index
 
 - Implementazione diretta Equazione 4 di Nogueira et al. (2018, JMLR 18(174):1-54)
 - Varianza: jackknife leave-one-out (Teorema 7)
@@ -233,29 +253,25 @@ Il dispatcher `run_fs_method(name, X, y, params)` mappa il nome (stringa) al wra
 
 ## 6. Prossimi Passi — Checklist Operativa
 
-### Pre-deploy
+### Completati
 - [x] Tutti gli script scritti e verificati sintatticamente
 - [x] Config.yaml completo con tutti i parametri
-- [x] Pacchetti testati localmente (48/48 OK)
-- [x] Script 01 testato (MTBLS1 scaricato con successo)
-- [ ] Verificare che il server abbia R ≥ 4.3
+- [x] Pacchetti installati (49/49 OK su R 4.5.2)
+- [x] Script 00 eseguito — 49 pacchetti OK
+- [x] Script 01 eseguito — 10/10 dataset scaricati (7 CIMCB + 1 MetaboLights + 1 MW + 1 MTBLS374 inutilizzabile)
+- [x] Script 02 eseguito — 9/9 dataset processati con successo
 
-### Sul server
-1. [ ] Clonare repository
-2. [ ] Eseguire `Rscript R/00_install_packages.R` — ~2-5 min
-3. [ ] Eseguire `Rscript R/01_download_data.R` — ~5-10 min con internet
-4. [ ] Verificare `download_manifest.rds`: quanti dataset scaricati con successo?
-5. [ ] Se <3 dataset: aggiornare `config.yaml` con accession alternativi (vedi sezione 7)
-6. [ ] Eseguire `Rscript R/02_preprocess.R` — ~2 min
-7. [ ] Eseguire `Rscript R/03_extract_empirical_params.R` — ~1 min
-8. [ ] **Pilot run:** modificare temporaneamente config per 1 scenario × 3 rep × 20 bootstrap
-9. [ ] Verificare tempi reali e risultati del pilot
-10. [ ] **Full run:** ripristinare config originale ed eseguire 04 → 05 → 06 (sequenziali)
-11. [ ] In parallelo: eseguire `Rscript R/07_cross_validation.R`
-12. [ ] Eseguire `Rscript R/08_figures.R`
+### Prossimi passi
+1. [ ] Eseguire `Rscript R/03_extract_empirical_params.R`
+2. [ ] Eseguire `Rscript R/04_simulate.R`
+3. [ ] **Pilot run script 05:** 1 scenario × 3 rep × 20 bootstrap
+4. [ ] Verificare tempi reali e risultati del pilot
+5. [ ] **Full run:** eseguire 05 → 06 (sequenziali)
+6. [ ] In parallelo: eseguire `Rscript R/07_cross_validation.R`
+7. [ ] Eseguire `Rscript R/08_figures.R`
 
 ### Post-esecuzione
-- [ ] Verificare `metrics_all.rds` e `metrics_summary.rds`
+- [ ] Verificare `metrics_all.rds`, `metrics_by_scenario.rds`, `metrics_summary.rds`
 - [ ] Verificare figure in `results/figures/`
 - [ ] Analisi esplorativa dei risultati
 - [ ] Stesura paper

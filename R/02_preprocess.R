@@ -17,6 +17,7 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(tidyr)
   library(jsonlite)
+  library(readxl)
 })
 
 source(here("R", "utils", "helpers.R"))
@@ -70,6 +71,107 @@ align_sample_info <- function(sample_info, sample_ids) {
 # ==============================================================================
 # Parsing functions
 # ==============================================================================
+
+#' Parse CIMCB benchmark Excel files (Mendez et al. 2019)
+#' Format: Sheet "Data" with SampleID, Class, M1..Mn
+#'         Sheet "Peak" with metabolite names
+#' @param acc_id Accession ID
+#' @param raw_dir Raw data directory
+#' @param acc_config Config entry for this accession
+#' @return List with X, y, sample_info, feature_info
+parse_cimcb <- function(acc_id, raw_dir, acc_config) {
+  xlsx_file <- file.path(raw_dir, acc_id, paste0(acc_id, ".xlsx"))
+  if (!file.exists(xlsx_file)) {
+    cli::cli_alert_danger("{acc_id}: Excel file not found")
+    return(NULL)
+  }
+
+  data_df <- readxl::read_excel(xlsx_file, sheet = "Data")
+  cli::cli_alert_info(
+    "CIMCB Excel: {nrow(data_df)} rows x {ncol(data_df)} cols"
+  )
+
+  # Filter to valid classes only (exclude QC, NA, etc.)
+  valid_classes <- acc_config$classes  # e.g. c(0, 1)
+  if (!is.null(valid_classes)) {
+    keep <- data_df$Class %in% valid_classes
+    n_removed <- sum(!keep)
+    data_df <- data_df[keep, , drop = FALSE]
+    if (n_removed > 0) {
+      cli::cli_alert_info(
+        paste0(
+          "Filtered to classes ",
+          paste(valid_classes, collapse = ","),
+          ": ", nrow(data_df), " kept, ",
+          n_removed, " removed"
+        )
+      )
+    }
+  }
+
+  # Extract feature columns (M1, M2, ...)
+  feat_cols <- grep("^M[0-9]+$", names(data_df), value = TRUE)
+  if (length(feat_cols) < 5) {
+    cli::cli_alert_danger(
+      "{acc_id}: too few feature columns ({length(feat_cols)})"
+    )
+    return(NULL)
+  }
+
+  X <- as.matrix(data_df[, feat_cols])
+  X <- apply(X, 2, as.numeric)
+  rownames(X) <- as.character(data_df$SampleID)
+
+  # Get metabolite names from Peak sheet
+  peak_df <- tryCatch(
+    readxl::read_excel(xlsx_file, sheet = "Peak"),
+    error = function(e) NULL
+  )
+  if (!is.null(peak_df) && "Name" %in% names(peak_df)) {
+    feat_names <- make.unique(as.character(peak_df$Name))
+    if (length(feat_names) == ncol(X)) {
+      colnames(X) <- feat_names
+    }
+  }
+
+  # Class labels — may be integer (0/1) or string
+  class_vals <- data_df$Class
+  if (is.numeric(class_vals) &&
+      all(class_vals %in% c(0, 1), na.rm = TRUE)) {
+    y_raw <- as.integer(class_vals)
+    already_binary <- TRUE
+  } else {
+    # String classes — pass through to binarize_classes
+    y_raw <- as.character(class_vals)
+    already_binary <- FALSE
+  }
+
+  # Sample info: keep all non-feature columns
+  meta_cols <- setdiff(names(data_df), feat_cols)
+  sample_info <- as.data.frame(data_df[, meta_cols])
+
+  feature_info <- data.frame(
+    feature_id = colnames(X),
+    original_label = feat_cols,
+    stringsAsFactors = FALSE
+  )
+
+  cli::cli_alert_success(
+    paste0(
+      acc_id, ": ", nrow(X), " samples x ", ncol(X),
+      " features, classes ",
+      paste(names(table(y_raw)), collapse = "/")
+    )
+  )
+
+  list(
+    X = X,
+    y = y_raw,
+    sample_info = sample_info,
+    feature_info = feature_info,
+    y_already_binary = already_binary
+  )
+}
 
 #' Parse MetaboLights MAF (Metabolite Assignment File) + sample sheet
 #' @param acc_id Accession ID
@@ -139,16 +241,66 @@ parse_metabolights <- function(acc_id, raw_dir) {
   sample_info <- NULL
   if (length(sample_files) > 0) {
     samp <- data.table::fread(sample_files[1], header = TRUE, check.names = FALSE)
-    factor_cols <- get_matching_colnames(
-      samp,
-      "factor|group|class|disease|condition|diagnosis|status"
-    )
+
+    # Look up config-specified class column for this accession
+    acc_config <- NULL
+    for (a in config$datasets$metabolights$accessions) {
+      if (a$id == acc_id) { acc_config <- a; break }
+    }
+
+    # Determine which factor column to use
+    if (!is.null(acc_config$class_column) && acc_config$class_column %in% names(samp)) {
+      factor_cols <- acc_config$class_column
+    } else {
+      factor_cols <- get_matching_colnames(
+        samp,
+        "factor|group|class|disease|condition|diagnosis|status"
+      )
+    }
+
     if (length(factor_cols) > 0) {
-      aligned <- align_sample_info(samp, rownames(X))
-      sample_info <- aligned$sample_info
-      if (sum(!is.na(aligned$matched)) > 0) {
-        y_raw <- sample_info[[factor_cols[1]]]
-        y <- as.character(y_raw)
+      # Match sample names: MAF data column names are sample IDs
+      sample_ids <- rownames(X)  # These are the MAF column names (= sample IDs)
+      samp_name_col <- if ("Sample Name" %in% names(samp)) "Sample Name" else {
+        # Try Source Name as fallback
+        sn <- grep("^Source Name$|^Sample Name$|^Sample$", names(samp), value = TRUE)
+        if (length(sn) > 0) sn[1] else NULL
+      }
+
+      if (!is.null(samp_name_col)) {
+        matched <- match(sample_ids, as.character(samp[[samp_name_col]]))
+        if (sum(!is.na(matched)) > 0) {
+          sample_info <- samp[matched[!is.na(matched)], , drop = FALSE]
+          y_raw <- samp[[factor_cols[1]]][matched]
+          y <- as.character(y_raw)
+          cli::cli_alert_info("Matched {sum(!is.na(matched))}/{length(sample_ids)} samples via '{samp_name_col}'")
+        }
+      }
+
+      # Fallback: if no match and same number of rows, assume aligned
+      if (is.null(y) && nrow(samp) == length(sample_ids)) {
+        sample_info <- samp
+        y <- as.character(samp[[factor_cols[1]]])
+        cli::cli_alert_info("Assumed row-aligned sample sheet ({nrow(samp)} rows)")
+      }
+
+      # Apply sample filter if specified in config (e.g. keep only "biological material")
+      if (!is.null(y) && !is.null(acc_config$filter_column) &&
+          acc_config$filter_column %in% names(samp) && !is.null(samp_name_col)) {
+        filter_vals <- samp[[acc_config$filter_column]]
+        filter_match <- match(sample_ids, as.character(samp[[samp_name_col]]))
+        keep <- rep(TRUE, length(sample_ids))
+        keep[!is.na(filter_match)] <- filter_vals[filter_match[!is.na(filter_match)]] == acc_config$filter_value
+        keep[is.na(keep)] <- FALSE
+        if (sum(keep) < length(keep)) {
+          X <- X[keep, , drop = FALSE]
+          y <- y[keep]
+          if (!is.null(sample_info)) {
+            # re-align sample_info
+            sample_info <- sample_info[seq_len(sum(keep)), , drop = FALSE]
+          }
+          cli::cli_alert_info("Filtered by '{acc_config$filter_column}' = '{acc_config$filter_value}': {sum(keep)}/{length(keep)} samples kept")
+        }
       }
     }
   }
@@ -167,13 +319,14 @@ parse_metabolights <- function(acc_id, raw_dir) {
 }
 
 #' Parse Metabolomics Workbench JSON data
+#' MW REST API returns nested JSON:
+#'   data: {row_id: {metabolite_name, DATA: {sample_id: value, ...}}, ...}
+#'   factors: {row_id: {local_sample_id, factors: "Key:Val | Key:Val", ...}, ...}
 #' @param acc_id Accession ID
 #' @param raw_dir Raw data directory
 #' @return List with X (matrix), y (vector), sample_info, feature_info
 parse_mw <- function(acc_id, raw_dir) {
   study_dir <- file.path(raw_dir, acc_id)
-
-  # Try data matrix
   data_file <- file.path(study_dir, paste0(acc_id, "_data.json"))
   factors_file <- file.path(study_dir, paste0(acc_id, "_factors.json"))
 
@@ -182,62 +335,118 @@ parse_mw <- function(acc_id, raw_dir) {
     return(NULL)
   }
 
-  # Parse data JSON
-  data_json <- jsonlite::fromJSON(data_file, simplifyDataFrame = TRUE)
+  # --- Parse data matrix (nested JSON) ----------------------------------------
+  data_json <- jsonlite::fromJSON(data_file, simplifyDataFrame = FALSE)
 
-  # MW returns data in various formats; handle the common ones
-  X <- NULL
-  if (is.data.frame(data_json)) {
-    # Direct data frame
-    num_cols <- vapply(data_json, is.numeric, logical(1))
-    if (sum(num_cols) > 5) {
-      X <- as.matrix(data_json[, num_cols])
-      sample_ids <- if ("sample_id" %in% names(data_json)) {
-        data_json$sample_id
-      } else {
-        paste0("S", seq_len(nrow(X)))
-      }
-      rownames(X) <- sample_ids
-    }
-  } else if (is.list(data_json)) {
-    # Nested format — try to extract
-    cli::cli_alert_info("Nested JSON format, attempting extraction...")
-    # Common MW pattern: list of metabolite -> sample -> value
-    if (length(data_json) > 0) {
-      mat <- tryCatch({
-        df <- as.data.frame(data_json, check.names = FALSE)
-        num_cols <- vapply(df, function(x) is.numeric(x) || all(!is.na(suppressWarnings(as.numeric(x)))),
-                           logical(1))
-        as.matrix(apply(df[, num_cols, drop = FALSE], 2, as.numeric))
-      }, error = function(e) NULL)
-      if (!is.null(mat) && ncol(mat) > 5) {
-        X <- mat
-      }
-    }
-  }
-
-  if (is.null(X)) {
-    cli::cli_alert_danger("{acc_id}: could not parse feature matrix")
+  if (length(data_json) == 0) {
+    cli::cli_alert_danger("{acc_id}: empty data JSON")
     return(NULL)
   }
 
-  # Parse factors for class labels
+  # Extract: each element has $metabolite_name and $DATA (named list sample->value)
+  first_entry <- data_json[[1]]
+  if (!is.null(first_entry$DATA)) {
+    # Nested MW format: {id: {metabolite_name, DATA: {sample: val}}}
+    sample_ids <- names(first_entry$DATA)
+    metabolite_names <- character(length(data_json))
+    mat <- matrix(NA_real_, nrow = length(sample_ids), ncol = length(data_json))
+
+    for (i in seq_along(data_json)) {
+      entry <- data_json[[i]]
+      metabolite_names[i] <- entry$metabolite_name %||% paste0("F", i)
+      vals <- unlist(entry$DATA)
+      # Ensure same sample order
+      mat[, i] <- suppressWarnings(as.numeric(vals[sample_ids]))
+    }
+
+    # Trim leading/trailing whitespace from sample IDs (MW sometimes has spaces)
+    sample_ids <- trimws(sample_ids)
+    metabolite_names <- make.unique(metabolite_names)
+    rownames(mat) <- sample_ids
+    colnames(mat) <- metabolite_names
+    X <- mat
+    cli::cli_alert_info("Parsed MW nested JSON: {nrow(X)} samples × {ncol(X)} metabolites")
+  } else if (is.data.frame(data_json)) {
+    # Direct data frame format (rare)
+    num_cols <- vapply(data_json, is.numeric, logical(1))
+    if (sum(num_cols) < 5) {
+      cli::cli_alert_danger("{acc_id}: too few numeric columns")
+      return(NULL)
+    }
+    X <- as.matrix(data_json[, num_cols])
+    sample_ids <- if ("sample_id" %in% names(data_json)) data_json$sample_id else paste0("S", seq_len(nrow(X)))
+    rownames(X) <- sample_ids
+  } else {
+    cli::cli_alert_danger("{acc_id}: could not parse data JSON format")
+    return(NULL)
+  }
+
+  if (ncol(X) < 5) {
+    cli::cli_alert_danger("{acc_id}: too few features ({ncol(X)})")
+    return(NULL)
+  }
+
+  # --- Parse factors (nested JSON with pipe-delimited factors string) ---------
   y <- NULL
   sample_info <- NULL
+
   if (file.exists(factors_file)) {
     factors_json <- tryCatch(
-      jsonlite::fromJSON(factors_file, simplifyDataFrame = TRUE),
+      jsonlite::fromJSON(factors_file, simplifyDataFrame = FALSE),
       error = function(e) NULL
     )
-    if (!is.null(factors_json) && is.data.frame(factors_json)) {
-      class_cols <- get_matching_colnames(
-        factors_json,
-        "factor|group|class|disease|condition|diagnosis|status"
-      )
-      aligned <- align_sample_info(factors_json, rownames(X))
-      sample_info <- aligned$sample_info
-      if (length(class_cols) > 0 && sum(!is.na(aligned$matched)) > 0) {
-        y <- as.character(sample_info[[class_cols[1]]])
+
+    if (!is.null(factors_json) && is.list(factors_json)) {
+      # Build data.frame from nested list
+      flist <- lapply(factors_json, function(entry) {
+        sid <- trimws(entry$local_sample_id %||% "")
+        fstring <- entry$factors %||% ""
+        list(local_sample_id = sid, factors_raw = fstring)
+      })
+      fdf <- do.call(rbind, lapply(flist, as.data.frame, stringsAsFactors = FALSE))
+
+      # Parse pipe-delimited factors into columns
+      parsed_factors <- strsplit(fdf$factors_raw, " \\| ")
+      all_keys <- unique(unlist(lapply(parsed_factors, function(x) sub(":.*", "", x))))
+
+      for (k in all_keys) {
+        fdf[[k]] <- vapply(parsed_factors, function(x) {
+          hit <- grep(paste0("^", k, ":"), x, value = TRUE)
+          if (length(hit) > 0) sub(paste0("^", k, ":"), "", hit[1]) else NA_character_
+        }, character(1))
+      }
+
+      # Match to X sample IDs
+      matched <- match(rownames(X), fdf$local_sample_id)
+      n_matched <- sum(!is.na(matched))
+      cli::cli_alert_info("Factor matching: {n_matched}/{nrow(X)} samples")
+
+      if (n_matched > 0) {
+        sample_info <- fdf[matched[!is.na(matched)], , drop = FALSE]
+
+        # Determine class column from config or auto-detect
+        acc_config <- NULL
+        for (a in config$datasets$metabolomics_workbench$accessions) {
+          if (a$id == acc_id) { acc_config <- a; break }
+        }
+
+        class_col <- NULL
+        if (!is.null(acc_config$class_factor) && acc_config$class_factor %in% names(fdf)) {
+          class_col <- acc_config$class_factor
+        } else {
+          # Auto-detect: look for columns with 2-4 unique values
+          for (k in all_keys) {
+            uv <- unique(fdf[[k]][!is.na(fdf[[k]])])
+            if (length(uv) >= 2 && length(uv) <= 4) { class_col <- k; break }
+          }
+        }
+
+        if (!is.null(class_col)) {
+          y_full <- rep(NA_character_, nrow(X))
+          y_full[!is.na(matched)] <- fdf[[class_col]][matched[!is.na(matched)]]
+          y <- y_full
+          cli::cli_alert_info("Class column: '{class_col}' → {paste(names(table(y)), collapse=', ')}")
+        }
       }
     }
   }
@@ -418,7 +627,14 @@ for (acc_id in successful) {
 
   # Parse based on source
   parsed <- tryCatch({
-    if (info$source == "MetaboLights") {
+    if (info$source == "CIMCB") {
+      # Find config entry for this accession
+      acc_cfg <- NULL
+      for (a in config$datasets$cimcb$accessions) {
+        if (a$id == acc_id) { acc_cfg <- a; break }
+      }
+      parse_cimcb(acc_id, raw_dir, acc_cfg)
+    } else if (info$source == "MetaboLights") {
       parse_metabolights(acc_id, raw_dir)
     } else {
       parse_mw(acc_id, raw_dir)
@@ -429,41 +645,72 @@ for (acc_id in successful) {
   })
 
   if (is.null(parsed)) {
-    cli::cli_alert_warning("{acc_id}: parsing failed, skipping")
-    datasets_summary[[acc_id]] <- list(id = acc_id, status = "parse_failed")
+    cli::cli_alert_warning(
+      "{acc_id}: parsing failed, skipping"
+    )
+    datasets_summary[[acc_id]] <- list(
+      id = acc_id, status = "parse_failed"
+    )
     next
   }
 
-  # Apply QC
+  # Apply QC filters
   filtered <- apply_qc_filters(parsed, config)
   if (is.null(filtered)) {
     cli::cli_alert_warning("{acc_id}: failed QC, skipping")
-    datasets_summary[[acc_id]] <- list(id = acc_id, status = "qc_failed")
+    datasets_summary[[acc_id]] <- list(
+      id = acc_id, status = "qc_failed"
+    )
     next
   }
 
-  # Binarize classes
-  class_result <- binarize_classes(filtered$y)
-  if (!class_result$valid) {
-    cli::cli_alert_warning("{acc_id}: cannot binarize classes, skipping")
-    datasets_summary[[acc_id]] <- list(id = acc_id, status = "class_failed")
-    next
-  }
-
-  # Keep only samples with valid class labels
-  valid_idx <- !is.na(class_result$y_binary)
-  X <- filtered$X[valid_idx, , drop = FALSE]
-  y <- class_result$y_binary[valid_idx]
-  sample_info <- filtered$sample_info
-  if (!is.null(sample_info) && nrow(sample_info) == length(valid_idx)) {
-    sample_info <- sample_info[valid_idx, , drop = FALSE]
+  # Binarize classes (skip for CIMCB — already binary)
+  if (isTRUE(filtered$y_already_binary)) {
+    y <- as.integer(filtered$y)
+    valid_idx <- !is.na(y)
+    X <- filtered$X[valid_idx, , drop = FALSE]
+    y <- y[valid_idx]
+    class_map <- c(control = "0", case = "1")
+    sample_info <- filtered$sample_info
+    if (!is.null(sample_info) &&
+        nrow(sample_info) == length(valid_idx)) {
+      sample_info <- sample_info[valid_idx, , drop = FALSE]
+    }
+  } else {
+    class_result <- binarize_classes(filtered$y)
+    if (!class_result$valid) {
+      cli::cli_alert_warning(
+        "{acc_id}: cannot binarize classes, skipping"
+      )
+      datasets_summary[[acc_id]] <- list(
+        id = acc_id, status = "class_failed"
+      )
+      next
+    }
+    valid_idx <- !is.na(class_result$y_binary)
+    X <- filtered$X[valid_idx, , drop = FALSE]
+    y <- class_result$y_binary[valid_idx]
+    class_map <- class_result$class_map
+    sample_info <- filtered$sample_info
+    if (!is.null(sample_info) &&
+        nrow(sample_info) == length(valid_idx)) {
+      sample_info <- sample_info[valid_idx, , drop = FALSE]
+    }
   }
 
   # Check minimum samples per group
   tab <- table(y)
-  if (any(tab < config$acceptance_criteria$min_samples_per_group)) {
-    cli::cli_alert_warning("{acc_id}: insufficient samples per group ({paste(tab, collapse='/')}), skipping")
-    datasets_summary[[acc_id]] <- list(id = acc_id, status = "too_few_samples")
+  min_spg <- config$acceptance_criteria$min_samples_per_group
+  if (any(tab < min_spg)) {
+    cli::cli_alert_warning(
+      paste0(
+        acc_id, ": insufficient samples/group (",
+        paste(tab, collapse = "/"), "), skipping"
+      )
+    )
+    datasets_summary[[acc_id]] <- list(
+      id = acc_id, status = "too_few_samples"
+    )
     next
   }
 
@@ -471,8 +718,10 @@ for (acc_id in successful) {
   X_pre_impute <- X
   X <- impute_missing(X)
 
-  # Normalize (using default preprocessing for now; Script 04 will vary this)
-  X_norm <- normalize_matrix(X, method = config$simulation$base$preprocessing)
+  # Normalize
+  X_norm <- normalize_matrix(
+    X, method = config$simulation$base$preprocessing
+  )
 
   # Final validation
   validate_data(X_norm, y, label = acc_id)
@@ -483,7 +732,7 @@ for (acc_id in successful) {
     X_raw = X_pre_impute,
     X_imputed = X,
     y = y,
-    class_map = class_result$class_map,
+    class_map = class_map,
     feature_info = filtered$feature_info,
     sample_info = sample_info,
     source = info$source,
@@ -492,10 +741,16 @@ for (acc_id in successful) {
     description = info$description
   )
 
-  out_file <- file.path(proc_dir, paste0(acc_id, "_processed.rds"))
-  save_result(processed, out_file,
-              metadata = list(n = nrow(X_norm), p = ncol(X_norm),
-                              n_case = sum(y == 1), n_control = sum(y == 0)))
+  out_file <- file.path(
+    proc_dir, paste0(acc_id, "_processed.rds")
+  )
+  save_result(
+    processed, out_file,
+    metadata = list(
+      n = nrow(X_norm), p = ncol(X_norm),
+      n_case = sum(y == 1), n_control = sum(y == 0)
+    )
+  )
 
   datasets_summary[[acc_id]] <- list(
     id = acc_id, status = "success",
@@ -504,7 +759,9 @@ for (acc_id in successful) {
     n_case = sum(y == 1), n_control = sum(y == 0)
   )
 
-  cli::cli_alert_success("{acc_id}: {nrow(X_norm)} samples × {ncol(X_norm)} features")
+  cli::cli_alert_success(
+    "{acc_id}: {nrow(X_norm)} samples x {ncol(X_norm)} features"
+  )
 }
 
 # ==============================================================================

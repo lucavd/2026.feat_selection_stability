@@ -1,0 +1,11 @@
+Accession ID,Platform,Condition,Samples,Classes,Reference,Access,Data Format,Notes
+MTBLS1,NMR,Metabolic study / intervention,~100,Binary derivable,"Haug et al., NAR",Yes (FTP),Yes (MAF),Benchmark gold standard
+MTBLS28,NMR,Type 2 Diabetes,60-80,T2D vs Control,N/A,Yes,Yes (MAF),Needs preprocessing
+MTBLS79,LC-MS,Cancer,>70,Tumor vs Control,N/A,Yes,Yes (MAF),High dimensional
+MTBLS233,LC-MS,Obesity,~100,Obese vs Lean,N/A,Yes,Yes (MAF),Factor filtering needed
+MTBLS374,LC-MS,Inflammation/Infection,60-90,Binary derivable,N/A,Yes,Yes (MAF),Multi-factor
+MTBLS404,NMR,Cardiovascular,~70,Patient vs Control,N/A,Yes,Yes (MAF),Replicates present
+ST000063,NMR,Type 2 Diabetes,~70,T2D vs Control,N/A,Yes (REST),Yes (datatable),Stable
+ST000105,LC-MS,Breast Cancer,~100,Tumor vs Control,N/A,Yes (REST),Yes (datatable),API unstable
+ST000284,LC-MS,Sepsis,~80,Sepsis vs Control,N/A,Yes (REST),Yes (datatable),Good signal
+ST000336,NMR,Cardiovascular,~60,Patient vs Control,N/A,Yes (REST),Yes (datatable),Smaller dataset
