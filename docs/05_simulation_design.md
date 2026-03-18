@@ -1,7 +1,7 @@
 # Design Sperimentale della Simulazione
 
-> Ultimo aggiornamento: 2026-03-18
-> Status: DRAFT
+> Ultimo aggiornamento: 2026-03-18 (rev. 2)
+> Status: DRAFT — sincronizzato con config.yaml e implementazione
 
 ---
 
@@ -136,7 +136,9 @@ for (j in 1:p) {
 | S6 | **Missing data** | Varia % missing | 0%, 5%, 15%, 30% | 5-30% tipico in metabolomica |
 | S7 | **Preprocessing** | Varia normalizzazione | log, pareto, auto-scaling, PQN | Impatto documentato (Metabolites 2022) |
 
-**Totale scenari:** 7 × ~4 livelli ciascuno = ~28 condizioni sperimentali
+**Totale scenari:** 7 × 3-4 livelli ciascuno = 25 condizioni sperimentali (vedi config.yaml)
+
+**Nota su `correlation_source`:** Lo scenario S3 usa la matrice empirica scalata come default. In aggiunta, `config.yaml` supporta `ar1` e `block` come sorgenti alternative per sensitivity analysis.
 
 ### 4.1 Dettaglio Scenario S1: p/n ratio
 
@@ -196,8 +198,8 @@ Per ogni scenario s in S:
 
 | Parametro | Valore | Giustificazione |
 |-----------|--------|-----------------|
-| B (bootstrap) | 200 | Compromesso tra stabilità stimata e tempo; Nogueira (2018) usa 100-200 |
-| R (replicazioni) | 50 | Per ottenere CI robusti sulle metriche aggregate |
+| B (bootstrap) | 100 | Nogueira (2018) suggerisce 100 sufficiente; riduce tempo 50% vs 200 |
+| R (replicazioni) | 30 | Sufficiente per CI robusti; riduce tempo 40% vs 50 |
 | Tipo resampling | Subsampling senza replacement (63.2%) | Raccomandato da Meinshausen & Bühlmann; riduce bias rispetto a bootstrap con replacement |
 | Stratificazione | Sì, per gruppo caso/controllo | Mantiene proporzione gruppi |
 
@@ -293,10 +295,10 @@ data/
 
 | Componente | Quantità |
 |-----------|----------|
-| Scenari | 7 categorie × ~4 livelli = 28 |
-| Replicazioni per scenario | 50 |
-| Bootstrap per replicazione | 200 |
+| Scenari | 7 categorie × 3-4 livelli = 25 |
+| Replicazioni per scenario | 30 |
+| Bootstrap per replicazione | 100 |
 | Metodi | 12 |
-| **Totale fit di feature selection** | **28 × 50 × 200 × 12 = 3,360,000** |
+| **Totale fit di feature selection** | **25 × 30 × 100 × 12 = 900,000** |
 
 → Necessaria parallelizzazione massiva (vedi [06_computational_plan.md](06_computational_plan.md))

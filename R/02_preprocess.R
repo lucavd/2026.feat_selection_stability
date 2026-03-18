@@ -580,14 +580,14 @@ normalize_matrix <- function(X, method = "log_auto") {
     "none" = X,
 
     "log_auto" = {
-      # Log2 transform + autoscaling (mean-center, unit variance)
-      X_log <- log2(pmax(X, 1))  # Avoid log(0)
+      # Log2(x + 1) transform + autoscaling (mean-center, unit variance)
+      X_log <- log2(X + 1)
       scale(X_log, center = TRUE, scale = TRUE)
     },
 
     "log_pareto" = {
-      # Log2 transform + Pareto scaling (divide by sqrt(sd))
-      X_log <- log2(pmax(X, 1))
+      # Log2(x + 1) transform + Pareto scaling (divide by sqrt(sd))
+      X_log <- log2(X + 1)
       X_centered <- scale(X_log, center = TRUE, scale = FALSE)
       sds <- apply(X_log, 2, sd, na.rm = TRUE)
       sweep(X_centered, 2, sqrt(pmax(sds, 1e-10)), "/")
@@ -599,14 +599,14 @@ normalize_matrix <- function(X, method = "log_auto") {
       quotients <- sweep(X, 2, pmax(ref, 1e-10), "/")
       dilution <- apply(quotients, 1, median, na.rm = TRUE)
       X_pqn <- sweep(X, 1, pmax(dilution, 1e-10), "/")
-      X_log <- log2(pmax(X_pqn, 1))
+      X_log <- log2(X_pqn + 1)
       scale(X_log, center = TRUE, scale = TRUE)
     },
 
     # Default fallback
     {
       cli::cli_alert_warning("Unknown method '{method}', using log_auto")
-      X_log <- log2(pmax(X, 1))
+      X_log <- log2(X + 1)
       scale(X_log, center = TRUE, scale = TRUE)
     }
   )

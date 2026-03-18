@@ -13,7 +13,7 @@
 | `R/00_install_packages.R` | ✅ | ✅ | 49 pacchetti (aggiunto `digest`); 3 da fonti alternative |
 | `R/01_download_data.R` | ✅ | ✅ | Download da 3 fonti: CIMCB GitHub (Excel), MetaboLights (FTP/API), MW (REST). 9/10 scaricati |
 | `R/02_preprocess.R` | ✅ | ✅ | Parser CIMCB (Excel), MetaboLights (MAF), MW (nested JSON). QC, imputazione mediana, normalizzazione. 9 dataset processati |
-| `R/03_extract_empirical_params.R` | ✅ | — | Correlazione Ledoit-Wolf, distribuzioni, eigenvalues |
+| `R/03_extract_empirical_params.R` | ✅ | ✅ | Correlazione Ledoit-Wolf, distribuzioni, eigenvalues. 9/9 dataset OK |
 | `R/04_simulate.R` | ✅ | — | MVN → exp → FC + confounders + interazioni + MNAR missing. Supporta `correlation_source`: empirical, ar1, block |
 | `R/05_feature_selection.R` | ✅ | — | 12 metodi × 100 bootstrap, checkpointing, parallelizzato |
 | `R/06_metrics.R` | ✅ | — | Nogueira, Jaccard, TPR, FDR, AUC (split stratificato, feature priority), parsimonia. Output: `metrics_all.rds`, `metrics_by_scenario.rds`, `metrics_summary.rds` |
@@ -66,11 +66,33 @@
 
 **9/10 processati con successo. Tempo totale: ~5 secondi.**
 
+### 2.4 Script 03 — Estrazione parametri empirici
+
+| Dataset | Platform | |log2FC| med. | |cor| medio | Rank eff. | Top 10 EV | Missing raw |
+|---------|----------|-------------|------------|-----------|-----------|-------------|
+| ST001047 | NMR | 0.31 | 0.283 | 31 | 57.3% | 5.6% |
+| MTBLS404 | LC-MS | 0.35 | 0.364 | 20 | 69.4% | 0% |
+| ST001000 | LC-MS | 0.40 | 0.086 | 57 | 27.8% | 20.2% |
+| MTBLS136 | LC-MS | 0.16 | 0.072 | 155 | 27.9% | 6% |
+| MTBLS92 | LC-MS | 0.48 | 0.278 | 20 | 75.7% | 0% |
+| ST000369 | GC-MS | 0.33 | 0.068 | 37 | 28.3% | 0.1% |
+| ST000496 | GC-MS | 0.43 | 0.310 | 12 | 74.3% | 0% |
+| MTBLS28 | LC-MS | 0.21 | 0.117 | 183 | 41.6% | 0% |
+| ST001706 | NMR | 0.58 | 0.111 | 15 | 56.0% | 0% |
+
+**Dataset di riferimento per simulazione (per piattaforma, il più grande):**
+- NMR → ST001047 (p=149)
+- LC-MS → ST001000 (p=1533)
+- GC-MS → ST000369 (p=181)
+
+**9/9 parametri estratti. Tempo totale: ~4 secondi.**
+
 ### 2.4 Tempi misurati
 
 - Script 00: ~36 secondi
 - Script 01: ~21 secondi (CIMCB download veloce, MetaboLights FTP OK, MW API OK)
 - Script 02: ~5 secondi
+- Script 03: ~4 secondi
 
 ---
 
@@ -106,6 +128,10 @@
 | `07_cross_validation.R` | `na.rm = TRUE` nelle soglie di selezione frequenza | Evita NA propagation nel conteggio features stabili |
 | `utils/helpers.R` | `setup_parallel()` cap workers a 100 | Previene esaurimento risorse su macchine con molti core |
 | `utils/stability_metrics.R` | Nogueira index con B==2: restituisce NA per varianza e CI | Jackknife leave-one-out richiede B≥3; evita divisione per zero |
+| `02_preprocess.R` | `pmax(X, 1)` → `log2(X + 1)` in `normalize_matrix()` per tutti i metodi (log_auto, log_pareto, pqn_auto, fallback) | `pmax(X, 1)` distruggeva feature con valori sub-unitari (es. M86 in MTBLS92: range [0.09, 0.63] → costante → NaN dopo `scale()`) |
+| `03_extract_empirical_params.R` | log2FC calcolato come differenza `(mean_case - mean_control) / log(2)` anziché `log2(ratio)` | Dati su scala log: il FC è una differenza, non un rapporto. Prima dava valori ~33 (nonsense) |
+| `03_extract_empirical_params.R` | Rimozione feature zero-varianza/all-NA prima della stima correlazione; tracking `cor_features_kept` e dimensione `n_features_cor` | Evita `eigen()` con NA/Inf; documenta mismatch dimensionale cor_matrix vs p per Script 04 |
+| `03_extract_empirical_params.R` | `na.rm = TRUE` in `colMeans()` e `sd()` per medie/sd marginali; NA handling in skewness/kurtosis | Gestisce residui NA in X post-preprocessing |
 
 ### 3.3 Imputazione
 
@@ -119,9 +145,9 @@ Implementate tutte e 4 le opzioni previste:
 | Codice config | Operazione |
 |---------------|------------|
 | `none` | Nessun preprocessing |
-| `log_auto` | log2 + autoscaling (mean-center, unit variance) — **DEFAULT** |
-| `log_pareto` | log2 + Pareto scaling (÷ √sd) |
-| `pqn_auto` | PQN + log2 + autoscaling |
+| `log_auto` | log2(x+1) + autoscaling (mean-center, unit variance) — **DEFAULT** |
+| `log_pareto` | log2(x+1) + Pareto scaling (÷ √sd) |
+| `pqn_auto` | PQN + log2(x+1) + autoscaling |
 
 ### 3.5 Segnale nelle simulazioni
 
@@ -260,10 +286,10 @@ Il dispatcher `run_fs_method(name, X, y, params)` mappa il nome (stringa) al wra
 - [x] Script 00 eseguito — 49 pacchetti OK
 - [x] Script 01 eseguito — 10/10 dataset scaricati (7 CIMCB + 1 MetaboLights + 1 MW + 1 MTBLS374 inutilizzabile)
 - [x] Script 02 eseguito — 9/9 dataset processati con successo
+- [x] Script 03 eseguito — 9/9 parametri estratti; 3 piattaforme (NMR, LC-MS, GC-MS)
 
 ### Prossimi passi
-1. [ ] Eseguire `Rscript R/03_extract_empirical_params.R`
-2. [ ] Eseguire `Rscript R/04_simulate.R`
+1. [ ] Eseguire `Rscript R/04_simulate.R`
 3. [ ] **Pilot run script 05:** 1 scenario × 3 rep × 20 bootstrap
 4. [ ] Verificare tempi reali e risultati del pilot
 5. [ ] **Full run:** eseguire 05 → 06 (sequenziali)
