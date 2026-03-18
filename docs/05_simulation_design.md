@@ -136,9 +136,13 @@ for (j in 1:p) {
 | S6 | **Missing data** | Varia % missing | 0%, 5%, 15%, 30% | 5-30% tipico in metabolomica |
 | S7 | **Preprocessing** | Varia normalizzazione | log, pareto, auto-scaling, PQN | Impatto documentato (Metabolites 2022) |
 
-**Totale scenari:** 7 × 3-4 livelli ciascuno = 25 condizioni sperimentali (vedi config.yaml)
+| S8 | **Semi-sintetico** | Spike-in su dati reali | FC 1.2, 1.5, 2.0 × 9 dataset | Validazione ecologica: correlazione, distribuzioni e missing autentici |
+
+**Totale:** S1-S7 MVN (26 livelli × 30 rep = 780 dataset) + S8 semi-sintetico (3 FC × 9 dataset × 30 rep = 810 dataset) = **1590 dataset**.
 
 **Nota su `correlation_source`:** Lo scenario S3 usa la matrice empirica scalata come default. In aggiunta, `config.yaml` supporta `ar1` e `block` come sorgenti alternative per sensitivity analysis.
+
+**Nota su S8 semi-sintetico:** I campioni controllo di ogni dataset reale vengono divisi in due gruppi bilanciati (pseudo-controllo e pseudo-caso). Il segnale (FC) viene impiantato sulle `p_true` feature selezionate a caso nei pseudo-casi. Tutto il resto (correlazione, distribuzioni, missing) è biologicamente autentico.
 
 ### 4.1 Dettaglio Scenario S1: p/n ratio
 
@@ -295,10 +299,9 @@ data/
 
 | Componente | Quantità |
 |-----------|----------|
-| Scenari | 7 categorie × 3-4 livelli = 25 |
-| Replicazioni per scenario | 30 |
-| Bootstrap per replicazione | 100 |
-| Metodi | 12 |
-| **Totale fit di feature selection** | **25 × 30 × 100 × 12 = 900,000** |
+| Dataset simulati | 780 MVN (S1-S7) + 810 semi-sintetici (S8) = 1590 |
+| Bootstrap per dataset | 100 |
+| Metodi | 11 (horseshoe rimosso per costo computazionale) |
+| **Totale fit di feature selection** | **1590 × 11 × 100 = 1,749,000** |
 
 → Necessaria parallelizzazione massiva (vedi [06_computational_plan.md](06_computational_plan.md))

@@ -311,6 +311,101 @@ normalize_sim <- function(X, method = "log_auto") {
 }
 
 # ==============================================================================
+# Semi-synthetic spike-in function
+# ==============================================================================
+
+#' Generate a semi-synthetic dataset from real control samples
+#'
+#' Takes real control samples, splits them into two groups (pseudo-control and
+#' pseudo-case), and spikes fold-change into p_true randomly chosen features
+#' of the pseudo-cases. Everything else (correlation, distributions, missing
+#' patterns) is authentically biological.
+#'
+#' @param real_data List with X (matrix), y (vector) from processed real dataset
+#' @param p_true Number of features to spike
+#' @param fc Fold change magnitude
+#' @param preprocessing Preprocessing method to apply after spike-in
+#' @param seed Random seed
+#' @return List: X, y, true_features, params (same structure as simulate_dataset)
+simulate_semisynthetic <- function(real_data, p_true, fc = 1.5,
+                                   preprocessing = "log_auto", seed = 42) {
+  set.seed(seed)
+
+  X_raw <- real_data$X_raw
+  p <- ncol(X_raw)
+  p_true <- min(p_true, p)
+
+  # Use only control samples as base material
+  ctrl_idx <- which(real_data$y == 0)
+  n_ctrl <- length(ctrl_idx)
+
+  if (n_ctrl < 4) stop("Too few control samples for semi-synthetic simulation")
+
+  X_ctrl <- X_raw[ctrl_idx, , drop = FALSE]
+
+  # Split controls into pseudo-control and pseudo-case (balanced)
+  n_half <- floor(n_ctrl / 2)
+  shuffled <- sample(n_ctrl)
+  idx_pseudo_ctrl <- shuffled[seq_len(n_half)]
+  idx_pseudo_case <- shuffled[(n_half + 1):(2 * n_half)]
+
+  X_out <- X_ctrl[c(idx_pseudo_ctrl, idx_pseudo_case), , drop = FALSE]
+  y <- c(rep(0L, n_half), rep(1L, n_half))
+
+  # Select true features and spike signal
+  true_idx <- sort(sample(seq_len(p), p_true))
+  true_features <- rep(FALSE, p)
+  true_features[true_idx] <- TRUE
+
+  # Random up/down directions
+  directions <- sample(c(1, -1), p_true, replace = TRUE)
+
+  # Apply FC to pseudo-case samples (on raw/original scale)
+  case_rows <- (n_half + 1):(2 * n_half)
+  for (i in seq_along(true_idx)) {
+    j <- true_idx[i]
+    if (directions[i] == 1) {
+      X_out[case_rows, j] <- X_out[case_rows, j] * fc
+    } else {
+      X_out[case_rows, j] <- X_out[case_rows, j] / fc
+    }
+  }
+
+  # Impute any missing values (median, same as pipeline)
+  if (any(is.na(X_out))) {
+    for (j in seq_len(ncol(X_out))) {
+      na_idx <- is.na(X_out[, j])
+      if (any(na_idx)) {
+        X_out[na_idx, j] <- median(X_out[, j], na.rm = TRUE)
+      }
+    }
+    X_out[is.na(X_out)] <- 0
+  }
+
+  # Preprocess
+  X_processed <- normalize_sim(X_out, method = preprocessing)
+
+  list(
+    X = X_processed,
+    X_raw = X_out,
+    y = y,
+    true_features = true_features,
+    true_idx = true_idx,
+    fc_values = rep(fc, p_true),
+    fc_directions = directions,
+    params = list(
+      type = "semisynthetic",
+      source_accession = real_data$accession,
+      source_platform = real_data$platform,
+      n_case = n_half, n_control = n_half,
+      p = p, p_true = p_true,
+      fc = fc, preprocessing = preprocessing,
+      seed = seed
+    )
+  )
+}
+
+# ==============================================================================
 # Generate all scenarios
 # ==============================================================================
 
@@ -322,15 +417,24 @@ n_rep <- config$simulation$resampling$n_replications
 
 setup_parallel(config)
 
-# Build task list
+# Separate MVN scenarios from semi-synthetic
+mvn_scenarios  <- Filter(function(s) !identical(s$type, "semisynthetic"), scenarios)
+semi_scenarios <- Filter(function(s) identical(s$type, "semisynthetic"), scenarios)
+
+# ==============================================================================
+# Part A: MVN scenarios (S1-S7)
+# ==============================================================================
+
+cli::cli_h2("MVN scenarios")
+
 tasks <- list()
-for (scenario in scenarios) {
+for (scenario in mvn_scenarios) {
   for (level in scenario$levels) {
     for (rep in seq_len(n_rep)) {
       task_id <- paste0(scenario$name, "_", level$label, "_rep", rep)
 
       # Check for existing checkpoint
-      if (checkpoint_exists(paste0("sim_", task_id), config)) {
+      if (file.exists(file.path(sim_dir, paste0("sim_", task_id, ".rds")))) {
         next
       }
 
@@ -351,13 +455,12 @@ for (scenario in scenarios) {
   }
 }
 
-cli::cli_alert_info("Tasks to simulate: {length(tasks)} (skipping existing checkpoints)")
+cli::cli_alert_info("MVN tasks: {length(tasks)} (skipping existing)")
 
 if (length(tasks) > 0) {
-  # Run simulations in parallel
   progressr::handlers(global = TRUE)
 
-  results <- furrr::future_map(tasks, function(task) {
+  results_mvn <- furrr::future_map(tasks, function(task) {
     seed <- derive_seed(config$project$seed,
                         paste0("sim_", task$task_id))
     sp <- task$params
@@ -385,26 +488,112 @@ if (length(tasks) > 0) {
       }
     )
 
-    # Add task metadata
     sim$task_id <- task$task_id
     sim$scenario <- task$scenario
     sim$level_label <- task$level_label
     sim$rep <- task$rep
 
-    # Save individual checkpoint
     fpath <- file.path(sim_dir, paste0("sim_", task$task_id, ".rds"))
     saveRDS(sim, fpath)
 
-    # Return summary only (to avoid memory bloat)
     list(task_id = task$task_id, status = if (is.null(sim$error)) "success" else "error",
          n = length(sim$y), p = length(sim$true_features),
          p_true = sum(sim$true_features, na.rm = TRUE))
   }, .options = furrr::furrr_options(seed = TRUE),
      .progress = TRUE)
 
-  cli::cli_alert_success("Simulation complete: {sum(vapply(results, function(r) r$status == 'success', logical(1)))} / {length(results)} succeeded")
+  cli::cli_alert_success("MVN: {sum(vapply(results_mvn, function(r) r$status == 'success', logical(1)))} / {length(results_mvn)} succeeded")
 } else {
-  cli::cli_alert_info("All simulations already checkpointed")
+  cli::cli_alert_info("All MVN simulations already exist")
+}
+
+# ==============================================================================
+# Part B: Semi-synthetic scenarios (S8)
+# ==============================================================================
+
+if (length(semi_scenarios) > 0) {
+  cli::cli_h2("Semi-synthetic scenarios")
+
+  # Load real processed datasets
+  proc_dir <- get_path(config, "processed_data")
+  summary <- load_result(file.path(proc_dir, "datasets_summary.rds"))$data
+  successful_ids <- names(summary)[vapply(summary, function(s) s$status == "success",
+                                          logical(1))]
+
+  semi_tasks <- list()
+  for (scenario in semi_scenarios) {
+    s_p_true <- scenario$p_true %||% base$p_true
+    for (level in scenario$levels) {
+      for (acc_id in successful_ids) {
+        for (rep in seq_len(n_rep)) {
+          task_id <- paste0(scenario$name, "_", level$label, "_", acc_id, "_rep", rep)
+
+          if (file.exists(file.path(sim_dir, paste0("sim_", task_id, ".rds")))) {
+            next
+          }
+
+          semi_tasks[[task_id]] <- list(
+            task_id = task_id,
+            scenario = scenario$name,
+            level_label = level$label,
+            acc_id = acc_id,
+            rep = rep,
+            fc = level$fc,
+            p_true = s_p_true,
+            preprocessing = base$preprocessing
+          )
+        }
+      }
+    }
+  }
+
+  cli::cli_alert_info("Semi-synthetic tasks: {length(semi_tasks)} ({length(successful_ids)} datasets x {length(semi_scenarios[[1]]$levels)} FC levels x {n_rep} reps)")
+
+  if (length(semi_tasks) > 0) {
+    results_semi <- furrr::future_map(semi_tasks, function(task) {
+      seed <- derive_seed(config$project$seed,
+                          paste0("sim_", task$task_id))
+
+      real_data <- tryCatch(
+        load_result(file.path(proc_dir, paste0(task$acc_id, "_processed.rds")))$data,
+        error = function(e) NULL
+      )
+
+      if (is.null(real_data)) {
+        return(list(task_id = task$task_id, status = "error"))
+      }
+
+      sim <- tryCatch(
+        simulate_semisynthetic(
+          real_data = real_data,
+          p_true = task$p_true,
+          fc = task$fc,
+          preprocessing = task$preprocessing,
+          seed = seed
+        ),
+        error = function(e) {
+          list(error = e$message, task_id = task$task_id)
+        }
+      )
+
+      sim$task_id <- task$task_id
+      sim$scenario <- task$scenario
+      sim$level_label <- task$level_label
+      sim$rep <- task$rep
+
+      fpath <- file.path(sim_dir, paste0("sim_", task$task_id, ".rds"))
+      saveRDS(sim, fpath)
+
+      list(task_id = task$task_id, status = if (is.null(sim$error)) "success" else "error",
+           n = length(sim$y), p = length(sim$true_features),
+           p_true = sum(sim$true_features, na.rm = TRUE))
+    }, .options = furrr::furrr_options(seed = TRUE),
+       .progress = TRUE)
+
+    cli::cli_alert_success("Semi-synthetic: {sum(vapply(results_semi, function(r) r$status == 'success', logical(1)))} / {length(results_semi)} succeeded")
+  } else {
+    cli::cli_alert_info("All semi-synthetic simulations already exist")
+  }
 }
 
 teardown_parallel()
@@ -419,10 +608,17 @@ cli::cli_h1("Simulation Summary")
 sim_files <- list.files(sim_dir, pattern = "^sim_.*\\.rds$")
 cli::cli_alert_info("Total simulated datasets: {length(sim_files)}")
 
-for (scenario in scenarios) {
+for (scenario in mvn_scenarios) {
   n_files <- sum(grepl(paste0("sim_", scenario$name), sim_files))
   n_expected <- length(scenario$levels) * n_rep
   cli::cli_alert_info("  {scenario$name}: {n_files}/{n_expected}")
+}
+if (length(semi_scenarios) > 0 && exists("successful_ids")) {
+  for (scenario in semi_scenarios) {
+    n_files <- sum(grepl(paste0("sim_", scenario$name), sim_files))
+    n_expected <- length(scenario$levels) * length(successful_ids) * n_rep
+    cli::cli_alert_info("  {scenario$name}: {n_files}/{n_expected} (semi-synthetic)")
+  }
 }
 
 finalize_logging("Script 04", session_file = "results/session_info_04.txt")

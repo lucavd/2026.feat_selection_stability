@@ -208,7 +208,8 @@ fs_boruta <- function(X, y, params) {
       x = X, y = y_factor,
       maxRuns = params$maxRuns,
       pValue = params$pValue,
-      doTrace = 0
+      doTrace = 0,
+      num.threads = 1
     )
     # Resolve tentative features
     fit_final <- Boruta::TentativeRoughFix(fit)
@@ -245,7 +246,8 @@ fs_rf_importance <- function(X, y, params) {
       y ~ ., data = df,
       num.trees = params$num_trees,
       importance = params$importance,
-      probability = TRUE
+      probability = TRUE,
+      num.threads = 1
     )
 
     importance <- fit$variable.importance
@@ -386,8 +388,23 @@ fs_shap_xgboost <- function(X, y, params) {
   t0 <- proc.time()["elapsed"]
   tryCatch({
     dtrain <- xgboost::xgb.DMatrix(data = X, label = y)
+
+    # Use GPU if available, fall back to CPU (cached after first check)
+    if (!exists(".xgb_device", envir = .GlobalEnv)) {
+      device <- tryCatch({
+        test_fit <- xgboost::xgb.train(
+          list(device = "cuda", tree_method = "hist", objective = "binary:logistic",
+               max_depth = 1, eta = 1), dtrain, nrounds = 1, verbose = 0)
+        "cuda"
+      }, error = function(e) "cpu")
+      assign(".xgb_device", device, envir = .GlobalEnv)
+    }
+    device <- get(".xgb_device", envir = .GlobalEnv)
+
     fit <- xgboost::xgb.train(
       params = list(
+        device = device,
+        tree_method = "hist",
         objective = "binary:logistic",
         eval_metric = "auc",
         max_depth = params$max_depth,
@@ -398,18 +415,18 @@ fs_shap_xgboost <- function(X, y, params) {
       verbose = 0
     )
 
-    # SHAP values via treeshap (faster than xgboost built-in for many features)
-    unified <- treeshap::xgboost.unify(fit, X)
-    shap_res <- treeshap::treeshap(unified, X, verbose = FALSE)
-    shap_vals <- shap_res$shaps
+    # Native SHAP via predict(predcontrib = TRUE)
+    shap_vals <- predict(fit, dtrain, predcontrib = TRUE)
+    # Last column is bias term — remove it
+    shap_vals <- shap_vals[, -ncol(shap_vals), drop = FALSE]
 
     # Mean absolute SHAP as importance
-    importance <- colMeans(abs(as.matrix(shap_vals)))
+    importance <- colMeans(abs(shap_vals))
     selected <- select_top_k(importance, params$top_k_method, params$top_n)
 
     list(selected = selected, importance = importance,
          time = as.numeric(proc.time()["elapsed"] - t0),
-         converged = TRUE, message = "")
+         converged = TRUE, message = paste0("device=", device))
   }, error = function(e) {
     list(selected = rep(FALSE, ncol(X)), importance = rep(NA_real_, ncol(X)),
          time = as.numeric(proc.time()["elapsed"] - t0),

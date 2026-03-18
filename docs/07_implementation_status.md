@@ -15,7 +15,7 @@
 | `R/02_preprocess.R` | ✅ | ✅ | Parser CIMCB (Excel), MetaboLights (MAF), MW (nested JSON). QC, imputazione mediana, normalizzazione. 9 dataset processati |
 | `R/03_extract_empirical_params.R` | ✅ | ✅ | Correlazione Ledoit-Wolf, distribuzioni, eigenvalues. 9/9 dataset OK |
 | `R/04_simulate.R` | ✅ | — | MVN → exp → FC + confounders + interazioni + MNAR missing. Supporta `correlation_source`: empirical, ar1, block |
-| `R/05_feature_selection.R` | ✅ | — | 12 metodi × 100 bootstrap, checkpointing, parallelizzato |
+| `R/05_feature_selection.R` | ✅ | — | 11 metodi × 100 bootstrap, checkpointing, parallelizzato per dataset (100 worker) |
 | `R/06_metrics.R` | ✅ | — | Nogueira, Jaccard, TPR, FDR, AUC (split stratificato, feature priority), parsimonia. Output: `metrics_all.rds`, `metrics_by_scenario.rds`, `metrics_summary.rds` |
 | `R/07_cross_validation.R` | ✅ | — | Bootstrap FS su dati reali + concordanza cross-database. Gestisce edge case 0/1 bootstrap convergenti |
 | `R/08_figures.R` | ✅ | — | 8 figure PDF publication-quality + supplementari |
@@ -87,12 +87,20 @@
 
 **9/9 parametri estratti. Tempo totale: ~4 secondi.**
 
-### 2.4 Tempi misurati
+### 2.5 Script 04 — Simulazione
+
+- **780 dataset MVN** (S1-S7): 7 scenari × 3-4 livelli × 30 rep. Tempo: ~76s con 8 worker
+- **810 dataset semi-sintetici** (S8): 9 dataset reali × 3 FC (1.2, 1.5, 2.0) × 30 rep. Tempo: ~45s con 8 worker
+- **Totale: 1590 dataset simulati**
+
+### 2.6 Tempi misurati
 
 - Script 00: ~36 secondi
 - Script 01: ~21 secondi (CIMCB download veloce, MetaboLights FTP OK, MW API OK)
 - Script 02: ~5 secondi
 - Script 03: ~4 secondi
+- Script 04: ~2 minuti (780 MVN + 810 semi-sintetici)
+- Script 05: in corso (stima ~6 ore con 100 worker)
 
 ---
 
@@ -106,10 +114,12 @@
 | Bootstrap (B) | 200 | 100 | Nogueira (2018) suggerisce 100 sufficiente |
 | Scenari × livelli | 28 | 25 (7 scenari × 3-4 livelli) | Tutte le combinazioni in config |
 | min_samples_per_group | 30 | 20 | Ampliare pool dataset disponibili |
-| Horseshoe MCMC | burn=1000, nmc=5000 | burn=1000, nmc=3000 | Riduce tempo ~40% per fit |
-| Boruta maxRuns | 500 | 300 | Bilancia accuratezza/tempo |
+| Horseshoe | incluso | **rimosso** | MCMC ~60 min/job a p=500; insostenibile (vedi §5.3) |
+| Boruta maxRuns | 500 | 100 | Default del pacchetto (Kursa & Rudnicki 2010); convergenza verificata |
+| n_cores (workers) | 8 | 100 | 128 core disponibili, 28 riservati al sistema |
 
-**Stima computazionale finale:** 25 livelli × 30 rep × 100 boot × 12 metodi = **900,000 fit**
+**Stima computazionale finale:** 1590 dataset × 11 metodi × 100 boot = **1,749,000 fit**
+(780 MVN S1-S7 + 810 semi-sintetici S8; horseshoe rimosso, da 12 a 11 metodi)
 
 ### 3.2 Bugfix e hardening (2026-03-18)
 
@@ -132,6 +142,12 @@
 | `03_extract_empirical_params.R` | log2FC calcolato come differenza `(mean_case - mean_control) / log(2)` anziché `log2(ratio)` | Dati su scala log: il FC è una differenza, non un rapporto. Prima dava valori ~33 (nonsense) |
 | `03_extract_empirical_params.R` | Rimozione feature zero-varianza/all-NA prima della stima correlazione; tracking `cor_features_kept` e dimensione `n_features_cor` | Evita `eigen()` con NA/Inf; documenta mismatch dimensionale cor_matrix vs p per Script 04 |
 | `03_extract_empirical_params.R` | `na.rm = TRUE` in `colMeans()` e `sd()` per medie/sd marginali; NA handling in skewness/kurtosis | Gestisce residui NA in X post-preprocessing |
+| `04_simulate.R` | Aggiunto scenario S8 semi-sintetico: spike-in su dati reali con `simulate_semisynthetic()` | 810 dataset aggiuntivi; correlazione e distribuzioni biologicamente autentiche |
+| `05_feature_selection.R` | Parallelizzazione ristrutturata: da chunk dataset×metodo a per-dataset (ogni worker = 1 dataset × 11 metodi sequenziali) | Elimina idle time; worker sempre occupati |
+| `utils/fs_methods.R` | `num.threads = 1` in Boruta e rf_importance (ranger) | Evita contention tra worker paralleli |
+| `utils/fs_methods.R` | `fs_shap_xgboost`: xgboost GPU (`device = "cuda"`) + `predict(predcontrib = TRUE)` al posto di `treeshap::treeshap()` | 250x speedup (da >150 min a 35s per 100 boot) |
+| `utils/fs_methods.R` | Cache device GPU in `.xgb_device` (global env) | Evita overhead test GPU ripetuto per ogni chiamata |
+| `config.yaml` | horseshoe rimosso, maxRuns Boruta 300→100, n_cores 8→100 | Fattibilità computazionale |
 
 ### 3.3 Imputazione
 
@@ -256,24 +272,108 @@ Il dispatcher `run_fs_method(name, X, y, params)` mappa il nome (stringa) al wra
 - `converged = FALSE`, `message = "n <= p: knockoff requires n > p"`
 - Nelle metriche aggregate, questi run sono esclusi (non falsano i risultati)
 
-### 5.3 Horseshoe — performance
+### 5.3 Horseshoe — RIMOSSO
 
-- **~60s/fit** con p=500, n=100; **~240s/fit** con p=1000
-- Horseshoe da solo: ~900,000/12 × 60s = ~75,000 fit × 60s = 4,500,000s ≈ 52 giorni sequenziali
-- Con 8 core: ~6.5 giorni solo per horseshoe
-- **Mitigazione:** MCMC ridotto (burn=1000, nmc=3000); checkpointing per ripresa
+- **Problema:** ~55-60 min per job (100 bootstrap × MCMC burn=1000 + nmc=3000) con p=500, n=50. Con p=1000 stimato ~4h/job.
+- **Pilot misurato:** su scenario S1_pn10 (p=500, n=50), horseshoe impiegava 55 min/job vs ~8 min per boruta (il secondo più lento). ~85% del tempo totale.
+- **Proiezione:** 1590 dataset × 55 min = ~60 giorni di runtime solo per horseshoe (8 core). Insostenibile.
+- **Decisione:** Rimosso dalla pipeline. Spike-slab (~1-2 min/job) copre la categoria bayesiana. Horseshoe citato nel paper come "tested in pilot, excluded for computational infeasibility at scale."
+- **Pipeline ora ha 11 metodi** (era 12)
 
-### 5.4 Boruta — timeout possibile
+### 5.4 Boruta — maxRuns ridotto a 100
 
-- maxRuns=300 dovrebbe completare in ~10-15s per fit con p=500
-- Su dataset con p=1000: ~25s/fit
-- TentativeRoughFix per features indecise
+- maxRuns=100 è il default del pacchetto (Kursa & Rudnicki 2010, JMLR 11:271-282)
+- Early stopping: se tutte le feature sono Confirmed/Rejected, termina prima (~60-80 iter su p=500)
+- `num.threads = 1` in ranger per evitare contention tra worker paralleli
+- TentativeRoughFix per features ancora indecise a convergenza
 
 ### 5.5 Stability selection — doppio sampling
 
 - `stabs` ha un resampling interno (B=100 subsample del LASSO)
 - Il nostro bootstrap esterno (B=100) crea doppio sampling
 - Questo è intenzionale: vogliamo misurare la stabilità di stability selection, non usarla come stability selection intende
+
+---
+
+## 5b. Ottimizzazione Computazionale — Cronologia (2026-03-18)
+
+### Problema originale
+
+Il primo run di Script 05 (con 12 metodi, chunk_size=16, parallelizzazione per dataset×metodo) produceva ~0.48 job/min. Proiezione: **27.6 giorni** per 19.080 job.
+
+Analisi dei timestamp sui file completati ha rivelato la distribuzione dei tempi per singolo job (100 bootstrap, n=100, p=500):
+
+| Metodo | Tempo/job | % del totale |
+|--------|----------|-------------|
+| fold_change, knockoff | <5s | ~0% |
+| elastic_net, rf_imp, wilcoxon, volcano, lasso | 13-21s | ~3% |
+| spike_slab | 5 min | ~12% |
+| stability_selection | 10 min | ~24% |
+| boruta (maxRuns=300) | 22 min | ~52% |
+| **horseshoe** | **55-60 min** | **~85%** (quando presente nel chunk) |
+| **shap_xgboost (treeshap CPU)** | **>150 min** | killer |
+
+### Intervento 1: Rimozione horseshoe
+
+- Horseshoe MCMC (burn=1000, nmc=3000) è intrinsecamente lento e non parallelizzabile su GPU
+- Rimosso dalla pipeline; spike-slab copre la categoria bayesiana
+- **Impatto:** da 12 a 11 metodi. Proiezione scesa a ~17 giorni
+
+### Intervento 2: XGBoost GPU + SHAP nativo (shap_xgboost)
+
+- **Problema:** `treeshap::treeshap()` su CPU era il vero killer (>150 min per 100 bootstrap)
+- **Soluzione:** Installato xgboost 3.2.0 precompilato con supporto CUDA (RTX 4090) + sostituzione di treeshap con `predict(fit, predcontrib = TRUE)` (SHAP nativo)
+- **Risultato misurato:** da >150 min a **35 secondi** per 100 bootstrap (~250x speedup)
+- File: xgboost 3.2.0 GPU binary da `s3://xgboost-nightly-builds/release_3.2.0/`
+- Device detection cached in `.xgb_device` (global env) per evitare overhead ripetuto
+
+### Intervento 3: Tentativi per Boruta (non implementati)
+
+Tre approcci testati per accelerare Boruta, nessuno dei quali ha funzionato:
+
+1. **Boruta XGBoost GPU (reimplementazione algoritmo in R):** L'algoritmo Boruta è stato reimplementato usando XGBoost GPU come base learner al posto di RF. Risultato: più lento (72s vs 24s singola chiamata) e troppo conservativo (3 feature selezionate vs 19). L'importanza SHAP si distribuisce diversamente dalla permutation importance di RF, rendendo la soglia shadow inefficace. **Scartato.**
+
+2. **Boruta Python (sklearn via system()):** Wrapper R→Python con BorutaPy + sklearn RandomForestClassifier. sklearn è 2.5x più veloce di R ranger per singola chiamata, ma l'overhead I/O (npy save/load + process spawn) per ogni bootstrap annullava il vantaggio: 17 min vs 22 min. **Marginale.**
+
+3. **Boruta Python batch (tutto il bootstrap in un processo Python):** Script `boruta_batch.py` che esegue tutti i 100 bootstrap in un unico processo Python. Problema: 27 min (peggio di R). Motivo: `n_jobs=1` nel batch sequenziale; con `n_jobs=-1` non parallelizzava (confermato dal monitoring CPU). Il loop di Boruta è intrinsecamente sequenziale (ogni iterazione dipende dalla precedente). **Scartato.**
+
+4. **cuML GPU RandomForest via BorutaPy:** Installato RAPIDS cuML (venv `/home/user/gpu_env`). Risultato: cuML RF su GPU era **più lento** di sklearn CPU (44.5s vs 9.5s) per n=100, p=500. I dati sono troppo piccoli per saturare la GPU — l'overhead di trasferimento CPU↔GPU domina. **Scartato.**
+
+**Conclusione Boruta:** R Boruta con `num.threads=1` e `maxRuns=100` (default pacchetto) è l'opzione più veloce: ~5.6 min per 100 bootstrap su n=100, p=500. La riduzione di maxRuns da 300 a 100 è il fattore più significativo (~4x speedup).
+
+### Intervento 4: Ristrutturazione parallelizzazione Script 05
+
+- **Prima:** parallelizzazione per dataset×metodo. Chunk di 16 task misti → worker veloci idle aspettando boruta/stab_sel
+- **Dopo:** parallelizzazione per dataset. Ogni worker prende 1 dataset ed esegue tutti 11 metodi sequenzialmente. Nessun idle time, nessuna contention
+- `num.threads = 1` in Boruta e rf_importance per evitare contention tra worker
+- n_cores aumentato da 8 a 100 (128 core disponibili, 28 riservati)
+
+### Intervento 5: Scenario semi-sintetico (S8)
+
+- Aggiunto scenario S8_semisynthetic: spike-in su 9 dataset reali × 3 FC × 30 rep = 810 dataset
+- Usa campioni controllo reali divisi in pseudo-caso/pseudo-controllo
+- Segnale (FC) impiantato su p_true feature random
+- Correlazione, distribuzioni, missing autenticamente biologici
+- Totale dataset simulati: 780 MVN + 810 semi-sintetici = 1590
+
+### Benchmark finale (n=100, p=500, 100 bootstrap stimati)
+
+| Metodo | Tempo est. 100 boot | Note |
+|--------|---------------------|------|
+| fold_change | 0s | |
+| knockoff | 1s | |
+| elastic_net | 12s | |
+| rf_importance | 16s | num.threads=1 |
+| wilcoxon_fdr | 18s | |
+| volcano | 18s | |
+| lasso | 18s | |
+| shap_xgboost | 35s | GPU + SHAP nativo |
+| spike_slab | 4.1 min | |
+| boruta | 5.6 min | maxRuns=100, num.threads=1 |
+| stability_selection | 10.3 min | |
+| **Totale per dataset** | **~22 min** | |
+
+**Stima runtime finale:** 1590 dataset / 100 worker × 22 min = **~5.8 ore**
 
 ---
 
@@ -287,9 +387,11 @@ Il dispatcher `run_fs_method(name, X, y, params)` mappa il nome (stringa) al wra
 - [x] Script 01 eseguito — 10/10 dataset scaricati (7 CIMCB + 1 MetaboLights + 1 MW + 1 MTBLS374 inutilizzabile)
 - [x] Script 02 eseguito — 9/9 dataset processati con successo
 - [x] Script 03 eseguito — 9/9 parametri estratti; 3 piattaforme (NMR, LC-MS, GC-MS)
+- [x] Script 04 eseguito — 1590 dataset simulati (780 MVN + 810 semi-sintetici)
+- [x] Ottimizzazione Script 05 — horseshoe rimosso, xgboost GPU, Boruta maxRuns=100, parallelizzazione per dataset, 100 worker
 
 ### Prossimi passi
-1. [ ] Eseguire `Rscript R/04_simulate.R`
+1. [ ] Eseguire Script 05 (`bash run_fs_with_telegram.sh`)
 3. [ ] **Pilot run script 05:** 1 scenario × 3 rep × 20 bootstrap
 4. [ ] Verificare tempi reali e risultati del pilot
 5. [ ] **Full run:** eseguire 05 → 06 (sequenziali)

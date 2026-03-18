@@ -1,14 +1,15 @@
 # Inventario Metodi di Feature Selection
 
-> Ultimo aggiornamento: 2026-03-17
-> Status: DRAFT — verificare versioni pacchetti prima dell'uso
+> Ultimo aggiornamento: 2026-03-18 (rev. 2)
+> Status: DRAFT — horseshoe rimosso, shap_xgboost aggiornato a GPU
 
 ---
 
 ## Overview
 
-12 metodi di feature selection organizzati in 5 categorie, tutti con implementazione R verificata.
-Opzionalmente: sparse autoencoders in Python (PyTorch).
+11 metodi di feature selection organizzati in 5 categorie (6 originali, horseshoe rimosso).
+
+**Nota (2026-03-18):** Horseshoe prior rimosso per insostenibilità computazionale (~60 min/job su p=500 con 100 bootstrap MCMC). Spike-slab copre la categoria bayesiana. SHAP aggiornato da `treeshap` (CPU, >150 min) a `predict(predcontrib = TRUE)` con xgboost GPU (35s). Dettagli in `docs/07_implementation_status.md` §5.3 e §5b.
 
 ---
 

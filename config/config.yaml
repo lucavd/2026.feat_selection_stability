@@ -9,7 +9,7 @@
 project:
   name: "feat_selection_stability"
   seed: 42
-  n_cores: 8            # Modificare in base all'hardware disponibile
+  n_cores: 100           # 128 core disponibili, 28 riservati al sistema
   log_level: "info"     # "debug", "info", "warn", "error"
 
 paths:
@@ -149,7 +149,7 @@ methods:
   - name: "boruta"
     category: "wrapper"
     params:
-      maxRuns: 300
+      maxRuns: 100
       pValue: 0.01
 
   - name: "rf_importance"
@@ -174,13 +174,9 @@ methods:
       fdr: 0.1
       statistic: "stat.glmnet_coefdiff"
 
-  - name: "horseshoe"
-    category: "bayesian"
-    params:
-      method_tau: "halfCauchy"
-      method_sigma: "Jeffreys"
-      burn: 1000
-      nmc: 3000
+  # horseshoe removed: MCMC cost (~60 min/job at p=500) makes it infeasible
+  # at scale (100 bootstrap × 1590 datasets). Tested in pilot; spike_slab
+  # covers the Bayesian category. See docs/07_implementation_status.md.
 
   - name: "spike_slab"
     category: "bayesian"
@@ -270,6 +266,18 @@ simulation:
         - {label: "log_auto",   preprocessing: "log_auto"}
         - {label: "log_pareto", preprocessing: "log_pareto"}
         - {label: "pqn_auto",   preprocessing: "pqn_auto"}
+
+    # --- Semi-synthetic spike-in on real data ---------------------------------
+    # Uses real control samples, duplicates them as cases, and spikes FC
+    # into p_true randomly chosen features. Ground truth is known.
+    - name: "S8_semisynthetic"
+      vary: "fc"
+      type: "semisynthetic"
+      p_true: 20
+      levels:
+        - {label: "semi_fc1.2", fc: 1.2}
+        - {label: "semi_fc1.5", fc: 1.5}
+        - {label: "semi_fc2.0", fc: 2.0}
 
   resampling:
     n_replications: 30
