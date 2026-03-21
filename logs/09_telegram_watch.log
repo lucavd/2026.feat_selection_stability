@@ -1,1 +1,2 @@
-ℹ Watch mode ON (every 300s). Stop with Ctrl+C
+ℹ Watch mode ON (every 300s). Ctrl+C to stop
+! Telegram send failed: Bad Request (HTTP 400). Failed to {"ok":false,"error_code":400,"description":"Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 50"}.

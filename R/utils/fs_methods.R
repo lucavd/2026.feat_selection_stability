@@ -389,17 +389,9 @@ fs_shap_xgboost <- function(X, y, params) {
   tryCatch({
     dtrain <- xgboost::xgb.DMatrix(data = X, label = y)
 
-    # Use GPU if available, fall back to CPU (cached after first check)
-    if (!exists(".xgb_device", envir = .GlobalEnv)) {
-      device <- tryCatch({
-        test_fit <- xgboost::xgb.train(
-          list(device = "cuda", tree_method = "hist", objective = "binary:logistic",
-               max_depth = 1, eta = 1), dtrain, nrounds = 1, verbose = 0)
-        "cuda"
-      }, error = function(e) "cpu")
-      assign(".xgb_device", device, envir = .GlobalEnv)
-    }
-    device <- get(".xgb_device", envir = .GlobalEnv)
+    # CPU in parallel workers to avoid GPU contention (40 workers sharing 1 GPU)
+    # GPU was causing 10h+ stalls on large datasets (MTBLS28: n=536, p=1533)
+    device <- "cpu"
 
     fit <- xgboost::xgb.train(
       params = list(
@@ -408,7 +400,8 @@ fs_shap_xgboost <- function(X, y, params) {
         objective = "binary:logistic",
         eval_metric = "auc",
         max_depth = params$max_depth,
-        eta = params$eta
+        eta = params$eta,
+        nthread = 1L
       ),
       data = dtrain,
       nrounds = params$nrounds,

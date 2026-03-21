@@ -159,13 +159,11 @@ load_result <- function(path) {
 #' Setup future plan for parallel execution
 #' @param config Config list
 setup_parallel <- function(config) {
-  n_cores_requested <- config$project$n_cores
-  n_cores <- min(n_cores_requested, 100L)
+  n_cores <- config$project$n_cores
   future::plan(future::multisession, workers = n_cores)
-  if (n_cores < n_cores_requested) {
-    cli::cli_alert_warning("Requested {n_cores_requested} workers; capping at {n_cores}")
-  }
-  cli::cli_alert_info("Parallel plan: multisession with {n_cores} workers")
+  cli::cli_alert_info(
+    "Parallel plan: multisession with {n_cores} workers"
+  )
 }
 
 #' Teardown parallel plan

@@ -9,7 +9,7 @@
 project:
   name: "feat_selection_stability"
   seed: 42
-  n_cores: 100           # 128 core disponibili, 28 riservati al sistema
+  n_cores: 40            # 128 core disponibili; 40 worker = sweet spot per future::multisession
   log_level: "info"     # "debug", "info", "warn", "error"
 
 paths:
