@@ -1,7 +1,7 @@
 # Design Sperimentale della Simulazione
 
-> Ultimo aggiornamento: 2026-03-18 (rev. 2)
-> Status: DRAFT — sincronizzato con config.yaml e implementazione
+> Ultimo aggiornamento: 2026-03-21 (rev. 3)
+> Status: ESEGUITO — 1590 dataset simulati, feature selection e metriche completate
 
 ---
 

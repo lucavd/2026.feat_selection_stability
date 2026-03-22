@@ -1,7 +1,7 @@
 # Inventario Metodi di Feature Selection
 
-> Ultimo aggiornamento: 2026-03-18 (rev. 2)
-> Status: DRAFT — horseshoe rimosso, shap_xgboost aggiornato a GPU
+> Ultimo aggiornamento: 2026-03-21 (rev. 3)
+> Status: RISULTATI EMPIRICI DISPONIBILI — Script 05/06 completati
 
 ---
 
@@ -385,6 +385,26 @@ install.packages(c(
 | RF importance | No | Parziale | Nessuno | O(B·n·p·log(n)) | Media-bassa |
 | Stability sel. | Dipende | Dipende dal base | PFER bound | O(B²·base) | **Alta** |
 | Knockoff | Sì | Sì (model-X) | FDR esatto | O(p³) | Media-alta |
-| Horseshoe | Sì | Sì (Bayes) | Posterior CI | O(MCMC·p²) | Media-alta |
+| ~~Horseshoe~~ | ~~Sì~~ | ~~Sì (Bayes)~~ | ~~Posterior CI~~ | ~~O(MCMC·p²)~~ | ~~Media-alta~~ |
 | Spike-and-slab | Sì | Sì (Bayes) | PPI | O(MCMC·p²) | Media-alta |
 | SHAP-based | No | No (data-driven) | Nessuno | O(model·n·p) | Dipende |
+
+### 7.1 Risultati Empirici (Script 06, 2026-03-21)
+
+Media su tutti gli scenari simulati (S1-S8). 12,985 task con status "success".
+
+| Metodo | Categoria | Nogueira ↑ | TPR ↑ | FDR ↓ | AUC ↑ | n features |
+|--------|-----------|-----------|-------|-------|-------|------------|
+| knockoff | embedded | **0.457** | 0.367 | 0.115 | 1.000 | 9.9 |
+| volcano | filter | 0.434 | 0.001 | **0.000** | 0.840 | 0.1 |
+| boruta | wrapper | 0.372 | 0.271 | 0.120 | 0.850 | 10.0 |
+| stability_selection | meta | 0.356 | 0.086 | 0.004 | 0.931 | 2.0 |
+| wilcoxon_fdr | filter | 0.350 | 0.202 | 0.003 | **0.944** | 4.4 |
+| rf_importance | wrapper | 0.318 | 0.090 | 0.079 | 0.840 | 5.1 |
+| fold_change | filter | 0.313 | **0.495** | 0.842 | 0.587 | 98.9 |
+| shap_xgboost | ml | 0.302 | 0.076 | 0.104 | 0.835 | 4.8 |
+| lasso | embedded | 0.293 | 0.205 | 0.065 | 0.924 | 9.4 |
+| elastic_net | embedded | 0.288 | 0.313 | 0.117 | 0.914 | 15.7 |
+| spike_slab | bayesian | 0.147 | 0.161 | 0.013 | 0.941 | 8.1 |
+
+**Caveat:** Knockoff converge solo su S8 semi-sintetici (n > p): 90 successi su 1590. Spike-slab fallisce su S8 (90 fallimenti). TPR generalmente basso negli scenari MVN (S1-S7) per il default fc=1.5 (effect size piccolo).

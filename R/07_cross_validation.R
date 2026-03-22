@@ -94,7 +94,9 @@ for (acc_id in successful_ids) {
 
       result <- run_fs_method(method$name, X[boot_idx, ], y[boot_idx], method$params)
 
-      selection_matrix[b, ]  <- as.integer(result$selected)
+      sel <- result$selected
+      sel[is.na(sel)] <- FALSE
+      selection_matrix[b, ]  <- as.integer(sel)
       importance_matrix[b, ] <- result$importance
       timings[b]   <- result$time
       converged[b] <- result$converged

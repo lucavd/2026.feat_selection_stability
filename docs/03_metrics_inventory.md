@@ -1,7 +1,7 @@
 # Inventario Metriche di Valutazione
 
-> Ultimo aggiornamento: 2026-03-18
-> Status: DRAFT
+> Ultimo aggiornamento: 2026-03-21
+> Status: METRICHE CALCOLATE — Script 06 completato (14,576 righe, 12,985 successi)
 
 ---
 

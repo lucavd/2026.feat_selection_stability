@@ -1,7 +1,7 @@
 # Stato Implementazione Pipeline
 
-> Ultimo aggiornamento: 2026-03-18
-> Status: IMPLEMENTATO — bugfix e hardening applicati post-deploy
+> Ultimo aggiornamento: 2026-03-21
+> Status: SCRIPT 05 + 06 COMPLETATI — metriche calcolate, pronto per 07/08
 
 ---
 
@@ -14,9 +14,9 @@
 | `R/01_download_data.R` | ✅ | ✅ | Download da 3 fonti: CIMCB GitHub (Excel), MetaboLights (FTP/API), MW (REST). 9/10 scaricati |
 | `R/02_preprocess.R` | ✅ | ✅ | Parser CIMCB (Excel), MetaboLights (MAF), MW (nested JSON). QC, imputazione mediana, normalizzazione. 9 dataset processati |
 | `R/03_extract_empirical_params.R` | ✅ | ✅ | Correlazione Ledoit-Wolf, distribuzioni, eigenvalues. 9/9 dataset OK |
-| `R/04_simulate.R` | ✅ | — | MVN → exp → FC + confounders + interazioni + MNAR missing. Supporta `correlation_source`: empirical, ar1, block |
-| `R/05_feature_selection.R` | ✅ | — | 11 metodi × 100 bootstrap, checkpointing, parallelizzato per dataset (100 worker) |
-| `R/06_metrics.R` | ✅ | — | Nogueira, Jaccard, TPR, FDR, AUC (split stratificato, feature priority), parsimonia. Output: `metrics_all.rds`, `metrics_by_scenario.rds`, `metrics_summary.rds` |
+| `R/04_simulate.R` | ✅ | ✅ | MVN → exp → FC + confounders + interazioni + MNAR missing. Supporta `correlation_source`: empirical, ar1, block |
+| `R/05_feature_selection.R` | ✅ | ✅ | 11 metodi × 100 bootstrap, checkpointing, parallelizzato per dataset (40 worker mclapply). Runtime: ~56 ore |
+| `R/06_metrics.R` | ✅ | ✅ | Nogueira, Jaccard, TPR, FDR, AUC (split stratificato, feature priority), parsimonia. 14,576 righe, 12,985 successi |
 | `R/07_cross_validation.R` | ✅ | — | Bootstrap FS su dati reali + concordanza cross-database. Gestisce edge case 0/1 bootstrap convergenti |
 | `R/08_figures.R` | ✅ | — | 8 figure PDF publication-quality + supplementari |
 | `R/utils/helpers.R` | ✅ | ✅ | Config, logging, checkpoint, seed deterministico, parallelizzazione (cap 100 workers) |
@@ -100,7 +100,54 @@
 - Script 02: ~5 secondi
 - Script 03: ~4 secondi
 - Script 04: ~2 minuti (780 MVN + 810 semi-sintetici)
-- Script 05: in corso (stima ~6 ore con 100 worker)
+- Script 05: **~56 ore** (2 giorni 8 ore) con 40 worker mclapply (18 Mar 22:31 → 21 Mar 06:39)
+- Script 06: completato 21 Mar 2026
+
+### 2.7 Script 05 — Feature Selection (COMPLETATO)
+
+- **17,490 file RDS** prodotti in `results/feature_selection/` (1.7 GB)
+- **Runtime reale:** ~56 ore con 40 worker `mclapply` (fork-based, non `future::multisession`)
+- **Nota:** La stima originale di ~6 ore con 100 worker era ottimistica. La riduzione a 40 worker (da 100) e il passaggio da `future`/`furrr` a `mclapply` hanno aumentato il tempo ma migliorato la stabilità (nessun crash per XGBoost GPU contention)
+- **XGBoost GPU disabilitato:** `CUDA_VISIBLE_DEVICES=""` per evitare stalli dei worker fork — SHAP calcolato su CPU
+
+### 2.8 Script 06 — Metriche (COMPLETATO)
+
+- **14,576 righe totali** in `metrics_all.rds` (935 KB)
+- **12,985 successi** (89%) + **1,591 insufficient_convergence** (11%)
+
+#### Convergenza per metodo
+
+| Metodo | Successi | Fallimenti | Note |
+|--------|----------|------------|------|
+| knockoff | 90 | 1,500 | Converge solo su S8 semi-sintetici (n > p) |
+| spike_slab | 1,500 | 90 | Fallisce su S8 semi-sintetici |
+| shap_xgboost | 1,589 | 1 | Quasi perfetto |
+| tutti gli altri | 1,590 | 0 | OK |
+
+#### Risultati principali (media su tutti gli scenari)
+
+| Metodo | Categoria | Nogueira | TPR | FDR | AUC | n_sel |
+|--------|-----------|----------|-----|-----|-----|-------|
+| knockoff | embedded | 0.457 | 0.367 | 0.115 | 1.000 | 9.9 |
+| volcano | filter | 0.434 | 0.001 | 0.000 | 0.840 | 0.1 |
+| boruta | wrapper | 0.372 | 0.271 | 0.120 | 0.850 | 10.0 |
+| stability_selection | meta | 0.356 | 0.086 | 0.004 | 0.931 | 2.0 |
+| wilcoxon_fdr | filter | 0.350 | 0.202 | 0.003 | 0.944 | 4.4 |
+| fold_change | filter | 0.313 | 0.495 | 0.842 | 0.587 | 98.9 |
+| rf_importance | wrapper | 0.318 | 0.090 | 0.079 | 0.840 | 5.1 |
+| shap_xgboost | ml | 0.302 | 0.076 | 0.104 | 0.835 | 4.8 |
+| lasso | embedded | 0.293 | 0.205 | 0.065 | 0.924 | 9.4 |
+| elastic_net | embedded | 0.288 | 0.313 | 0.117 | 0.914 | 15.7 |
+| spike_slab | bayesian | 0.147 | 0.161 | 0.013 | 0.941 | 8.1 |
+
+#### Osservazioni chiave
+
+1. **TPR generalmente basso** negli scenari MVN (S1-S7): fc=1.5 di default è un effect size piccolo. Solo con fc≥2.0 il TPR diventa apprezzabile (0.25-0.43). Questo è il messaggio centrale del paper: "stability illusion"
+2. **Knockoff ha la stabilità più alta** (0.457) ma converge solo quando n > p (scenari S8 semi-sintetici) — inutilizzabile nella metabolomica tipica ad alta dimensionalità
+3. **Fold change** trova il segnale (TPR 0.495) ma con FDR catastrofico (0.842) — seleziona ~99 feature su ~20 vere
+4. **Stability selection** è la più conservativa: solo 2 feature in media, FDR quasi zero, ma TPR basso (0.086)
+5. **Wilcoxon FDR** offre il miglior compromesso pratico: FDR quasi zero, TPR discreto, AUC alta
+6. **Scenari semi-sintetici (S8)** funzionano meglio perché la struttura di correlazione reale aiuta i metodi
 
 ---
 
@@ -343,10 +390,10 @@ Tre approcci testati per accelerare Boruta, nessuno dei quali ha funzionato:
 
 ### Intervento 4: Ristrutturazione parallelizzazione Script 05
 
-- **Prima:** parallelizzazione per dataset×metodo. Chunk di 16 task misti → worker veloci idle aspettando boruta/stab_sel
-- **Dopo:** parallelizzazione per dataset. Ogni worker prende 1 dataset ed esegue tutti 11 metodi sequenzialmente. Nessun idle time, nessuna contention
+- **Prima:** parallelizzazione per dataset×metodo con `future`/`furrr`. Chunk di 16 task misti → worker veloci idle aspettando boruta/stab_sel
+- **Dopo (rev.1):** parallelizzazione per dataset. Ogni worker prende 1 dataset ed esegue tutti 11 metodi sequenzialmente
+- **Dopo (rev.2, produzione):** passaggio da `future`/`furrr` a `parallel::mclapply` (fork-based). 40 worker. XGBoost GPU disabilitato (`CUDA_VISIBLE_DEVICES=""`) per evitare stalli dei worker fork. SHAP calcolato su CPU
 - `num.threads = 1` in Boruta e rf_importance per evitare contention tra worker
-- n_cores aumentato da 8 a 100 (128 core disponibili, 28 riservati)
 
 ### Intervento 5: Scenario semi-sintetico (S8)
 
@@ -367,13 +414,14 @@ Tre approcci testati per accelerare Boruta, nessuno dei quali ha funzionato:
 | wilcoxon_fdr | 18s | |
 | volcano | 18s | |
 | lasso | 18s | |
-| shap_xgboost | 35s | GPU + SHAP nativo |
+| shap_xgboost | 35s | GPU + SHAP nativo (benchmark), CPU in produzione |
 | spike_slab | 4.1 min | |
 | boruta | 5.6 min | maxRuns=100, num.threads=1 |
 | stability_selection | 10.3 min | |
 | **Totale per dataset** | **~22 min** | |
 
-**Stima runtime finale:** 1590 dataset / 100 worker × 22 min = **~5.8 ore**
+**Stima originale:** 1590 dataset / 100 worker × 22 min = ~5.8 ore
+**Runtime reale:** ~56 ore con 40 worker mclapply (CPU-only, no GPU). Fattori: (1) riduzione worker da 100 a 40, (2) SHAP su CPU invece che GPU, (3) scenari semi-sintetici con p variabile (fino a 1533)
 
 ---
 
@@ -382,27 +430,21 @@ Tre approcci testati per accelerare Boruta, nessuno dei quali ha funzionato:
 ### Completati
 - [x] Tutti gli script scritti e verificati sintatticamente
 - [x] Config.yaml completo con tutti i parametri
-- [x] Pacchetti installati (49/49 OK su R 4.5.2)
+- [x] Pacchetti installati (49/49 OK su R 4.5.3)
 - [x] Script 00 eseguito — 49 pacchetti OK
 - [x] Script 01 eseguito — 10/10 dataset scaricati (7 CIMCB + 1 MetaboLights + 1 MW + 1 MTBLS374 inutilizzabile)
 - [x] Script 02 eseguito — 9/9 dataset processati con successo
 - [x] Script 03 eseguito — 9/9 parametri estratti; 3 piattaforme (NMR, LC-MS, GC-MS)
 - [x] Script 04 eseguito — 1590 dataset simulati (780 MVN + 810 semi-sintetici)
-- [x] Ottimizzazione Script 05 — horseshoe rimosso, xgboost GPU, Boruta maxRuns=100, parallelizzazione per dataset, 100 worker
+- [x] Ottimizzazione Script 05 — horseshoe rimosso, xgboost GPU→CPU, Boruta maxRuns=100, mclapply 40 worker
+- [x] Script 05 eseguito — 17,490 file FS (1.7 GB), ~56 ore runtime (18-21 Mar 2026)
+- [x] Script 06 eseguito — 14,576 righe metriche (12,985 successi, 1,591 insufficient_convergence)
 
 ### Prossimi passi
-1. [ ] Eseguire Script 05 (`bash run_fs_with_telegram.sh`)
-3. [ ] **Pilot run script 05:** 1 scenario × 3 rep × 20 bootstrap
-4. [ ] Verificare tempi reali e risultati del pilot
-5. [ ] **Full run:** eseguire 05 → 06 (sequenziali)
-6. [ ] In parallelo: eseguire `Rscript R/07_cross_validation.R`
-7. [ ] Eseguire `Rscript R/08_figures.R`
-
-### Post-esecuzione
-- [ ] Verificare `metrics_all.rds`, `metrics_by_scenario.rds`, `metrics_summary.rds`
-- [ ] Verificare figure in `results/figures/`
-- [ ] Analisi esplorativa dei risultati
-- [ ] Stesura paper
+1. [ ] Eseguire Script 07 (`Rscript R/07_cross_validation.R`) — cross-validation su dati reali
+2. [ ] Eseguire Script 08 (`Rscript R/08_figures.R`) — figure per il paper
+3. [ ] Analisi esplorativa dei risultati
+4. [ ] Stesura paper
 
 ---
 

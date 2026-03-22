@@ -1,7 +1,7 @@
 # Guida Deploy su Server
 
-> Ultimo aggiornamento: 2026-03-17
-> Status: PRONTO PER DEPLOY
+> Ultimo aggiornamento: 2026-03-21
+> Status: PIPELINE ESEGUITA (Script 00-06 completati)
 
 ---
 
@@ -110,12 +110,8 @@ Eseguire Script 04 → 05 → 06, verificare risultati, poi ripristinare valori 
 
 ```bash
 # Contare file checkpoint generati
-ls data/simulated/sim_*.rds | wc -l              # Script 04
-ls results/feature_selection/fs_*.rds | wc -l     # Script 05
-
-# Confronto con atteso
-# Script 04: 25 livelli × 30 rep = 750 file
-# Script 05: 750 × 12 metodi = 9,000 file
+ls data/simulated/sim_*.rds | wc -l              # Script 04 — attesi: 1590
+ls results/feature_selection/fs_*.rds | wc -l     # Script 05 — attesi: 17,490 (1590 × 11 metodi)
 
 # Tail del log
 tail -f logs/05_fs.log
@@ -132,12 +128,13 @@ project:
   n_cores: 8    # ← Cambiare in base al server
 ```
 
-| Server | n_cores consigliato | Tempo Script 05 stimato |
-|--------|--------------------|-----------------------|
-| Laptop 8 core | 6-7 | ~12 giorni |
-| Workstation 16 core | 14 | ~6 giorni |
-| Cloud 32 core | 30 | ~3 giorni |
-| HPC 64 core | 60 | ~1.5 giorni |
+| Server | n_cores consigliato | Tempo Script 05 stimato | Note |
+|--------|--------------------|-----------------------|------|
+| Laptop 8 core | 6-7 | ~12 giorni | |
+| Workstation 16 core | 14 | ~6 giorni | |
+| Cloud 32 core | 30 | ~3 giorni | |
+| **128 core (reale)** | **40** | **~56 ore** | mclapply fork, CPU-only |
+| HPC 64 core | 60 | ~1.5 giorni | |
 
 **Regola:** usare `n_cores - 2` per lasciare headroom al sistema.
 
@@ -168,9 +165,9 @@ Rscript R/05_feature_selection.R 2>&1 | tee -a logs/05_fs.log
 | `data/raw/` | 1-5 GB | Dipende da quanti dataset scaricati |
 | `data/processed/` | 100-500 MB | Dataset processati |
 | `data/empirical_params/` | 50-200 MB | Matrici correlazione |
-| `data/simulated/` | 5-15 GB | 750 dataset simulati |
-| `results/feature_selection/` | 10-30 GB | 9,000 file con selection matrices |
-| `results/metrics/` | 50-200 MB | Tabelle aggregate |
+| `data/simulated/` | 1.9 GB | 1590 dataset simulati |
+| `results/feature_selection/` | 1.7 GB | 17,490 file con selection matrices |
+| `results/metrics/` | ~1 MB | Tabelle aggregate (metrics_all 935 KB) |
 | `results/cross_validation/` | 500 MB - 2 GB | FS su dati reali |
 | `results/figures/` | 10-50 MB | PDF vettoriali |
 | **Totale** | **~20-50 GB** | |

@@ -1,0 +1,917 @@
+=== Script 07: Cross-Database Validation ===
+
+── Script 07: Cross-Database Validation ────────────────────────────────────────
+ℹ Start time: 2026-03-21 18:56:37
+ℹ Seed: 42
+ℹ Cores: 40
+ℹ 9 datasets available for cross-validation
+
+── Part 1: Bootstrap FS on real datasets ───────────────────────────────────────
+ℹ Parallel plan: multisession with 40 workers
+
+── Dataset: ST001047 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: running 100 bootstraps...
+✔   fold_change: nogueira=0.417, n_selected_50=36
+ℹ   volcano: running 100 bootstraps...
+✔   volcano: nogueira=0.102, n_selected_50=0
+ℹ   lasso: running 100 bootstraps...
+✔   lasso: nogueira=0.386, n_selected_50=4
+ℹ   elastic_net: running 100 bootstraps...
+✔   elastic_net: nogueira=0.494, n_selected_50=16
+ℹ   boruta: running 100 bootstraps...
+✔   boruta: nogueira=0.551, n_selected_50=11
+ℹ   rf_importance: running 100 bootstraps...
+✔   rf_importance: nogueira=0.557, n_selected_50=2
+ℹ   stability_selection: running 100 bootstraps...
+✔   stability_selection: nogueira=0.43, n_selected_50=1
+ℹ   knockoff: running 100 bootstraps...
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+! Knockoff: n <= p (52 <= 149), skipping
+✔   knockoff: nogueira=NA, n_selected_50=0
+ℹ   spike_slab: running 100 bootstraps...
+✔   spike_slab: nogueira=0.298, n_selected_50=5
+ℹ   shap_xgboost: running 100 bootstraps...
+✔   shap_xgboost: nogueira=0.346, n_selected_50=2
+
+── Dataset: MTBLS404 ──
+
+ℹ   wilcoxon_fdr: running 100 bootstraps...
+✔   wilcoxon_fdr: nogueira=0.585, n_selected_50=35
+ℹ   fold_change: running 100 bootstraps...
+✔   fold_change: nogueira=0.445, n_selected_50=96
+ℹ   volcano: running 100 bootstraps...
+✔   volcano: nogueira=0.561, n_selected_50=36
+ℹ   lasso: running 100 bootstraps...
+✔   lasso: nogueira=0.531, n_selected_50=22
+ℹ   elastic_net: running 100 bootstraps...
+✔   elastic_net: nogueira=0.478, n_selected_50=31
+ℹ   boruta: running 100 bootstraps...
+✔   boruta: nogueira=0.501, n_selected_50=13
+ℹ   rf_importance: running 100 bootstraps...
+✔   rf_importance: nogueira=0.522, n_selected_50=2
+ℹ   stability_selection: running 100 bootstraps...
+✔   stability_selection: nogueira=0.813, n_selected_50=2
+ℹ   knockoff: running 100 bootstraps...
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+! Knockoff: n <= p (116 <= 120), skipping
+✔   knockoff: nogueira=NA, n_selected_50=0
+ℹ   spike_slab: running 100 bootstraps...
+✔   spike_slab: nogueira=0.378, n_selected_50=15
+ℹ   shap_xgboost: running 100 bootstraps...
+✔   shap_xgboost: nogueira=0.501, n_selected_50=2
+
+── Dataset: ST001000 ──
+
+ℹ   wilcoxon_fdr: running 100 bootstraps...
+✔   wilcoxon_fdr: nogueira=0.432, n_selected_50=87
+ℹ   fold_change: running 100 bootstraps...
+✔   fold_change: nogueira=0.599, n_selected_50=893
+ℹ   volcano: running 100 bootstraps...
+✔   volcano: nogueira=0.467, n_selected_50=63
+ℹ   lasso: running 100 bootstraps...
+✔   lasso: nogueira=0.167, n_selected_50=1
+ℹ   elastic_net: running 100 bootstraps...
+✔   elastic_net: nogueira=0.255, n_selected_50=7
+ℹ   boruta: running 100 bootstraps...
+✔   boruta: nogueira=0.291, n_selected_50=11
+ℹ   rf_importance: running 100 bootstraps...
+✔   rf_importance: nogueira=0.219, n_selected_50=2
+ℹ   stability_selection: running 100 bootstraps...
+✔   stability_selection: nogueira=0.02, n_selected_50=0
+ℹ   knockoff: running 100 bootstraps...
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+! Knockoff: n <= p (68 <= 1533), skipping
+✔   knockoff: nogueira=NA, n_selected_50=0
+ℹ   spike_slab: running 100 bootstraps...
+✔   spike_slab: nogueira=0.015, n_selected_50=0
+ℹ   shap_xgboost: running 100 bootstraps...
+✔   shap_xgboost: nogueira=0.166, n_selected_50=0
+
+── Dataset: MTBLS136 ──
+
+ℹ   wilcoxon_fdr: running 100 bootstraps...
+✔   wilcoxon_fdr: nogueira=0.564, n_selected_50=77
+ℹ   fold_change: running 100 bootstraps...
+✔   fold_change: nogueira=0.557, n_selected_50=258
+ℹ   volcano: running 100 bootstraps...
+✔   volcano: nogueira=0.538, n_selected_50=20
+ℹ   lasso: running 100 bootstraps...
+✔   lasso: nogueira=0.351, n_selected_50=28
+ℹ   elastic_net: running 100 bootstraps...
+✔   elastic_net: nogueira=0.382, n_selected_50=44
+ℹ   boruta: running 100 bootstraps...
+✔   boruta: nogueira=0.358, n_selected_50=14
+ℹ   rf_importance: running 100 bootstraps...
+✔   rf_importance: nogueira=0.195, n_selected_50=1
+ℹ   stability_selection: running 100 bootstraps...
+✔   stability_selection: nogueira=0.457, n_selected_50=1
+ℹ   knockoff: running 100 bootstraps...
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+! Knockoff: n <= p (422 <= 787), skipping
+✔   knockoff: nogueira=NA, n_selected_50=0
+ℹ   spike_slab: running 100 bootstraps...
+✔   spike_slab: nogueira=0.212, n_selected_50=8
+ℹ   shap_xgboost: running 100 bootstraps...
+✔   shap_xgboost: nogueira=0.225, n_selected_50=1
+
+── Dataset: MTBLS92 ──
+
+ℹ   wilcoxon_fdr: running 100 bootstraps...
+✔   wilcoxon_fdr: nogueira=0.532, n_selected_50=61
+ℹ   fold_change: running 100 bootstraps...
+✔   fold_change: nogueira=0.412, n_selected_50=126
+ℹ   volcano: running 100 bootstraps...
+✔   volcano: nogueira=0.518, n_selected_50=60
+ℹ   lasso: running 100 bootstraps...
+✔   lasso: nogueira=0.427, n_selected_50=11
+ℹ   elastic_net: running 100 bootstraps...
+✔   elastic_net: nogueira=0.438, n_selected_50=20
+ℹ   boruta: running 100 bootstraps...
+✔   boruta: nogueira=0.444, n_selected_50=10
+ℹ   rf_importance: running 100 bootstraps...
+✔   rf_importance: nogueira=0.42, n_selected_50=3
+ℹ   stability_selection: running 100 bootstraps...
+✔   stability_selection: nogueira=0.224, n_selected_50=0
+ℹ   knockoff: running 100 bootstraps...
+Loading required package: Matrix
+Loaded glmnet 4.1-10
+✔   knockoff: nogueira=-0.001, n_selected_50=0
+ℹ   spike_slab: running 100 bootstraps...
+✔   spike_slab: nogueira=NA, n_selected_50=0
+ℹ   shap_xgboost: running 100 bootstraps...
+✔   shap_xgboost: nogueira=0.223, n_selected_50=1
+
+── Dataset: ST000369 ──
+
+ℹ   wilcoxon_fdr: running 100 bootstraps...
+✔   wilcoxon_fdr: nogueira=0.028, n_selected_50=0
+ℹ   fold_change: running 100 bootstraps...
+✔   fold_change: nogueira=0.504, n_selected_50=104
+ℹ   volcano: running 100 bootstraps...
+✔   volcano: nogueira=0.016, n_selected_50=0
+ℹ   lasso: running 100 bootstraps...
+✔   lasso: nogueira=0.182, n_selected_50=1
+ℹ   elastic_net: running 100 bootstraps...
+✔   elastic_net: nogueira=0.281, n_selected_50=4
+ℹ   boruta: running 100 bootstraps...
+✔   boruta: nogueira=0.27, n_selected_50=3
+ℹ   rf_importance: running 100 bootstraps...
+✔   rf_importance: nogueira=0.16, n_selected_50=0
+ℹ   stability_selection: running 100 bootstraps...
+✔   stability_selection: nogueira=0.124, n_selected_50=0
+ℹ   knockoff: running 100 bootstraps...
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+! Knockoff: n <= p (51 <= 181), skipping
+✔   knockoff: nogueira=NA, n_selected_50=0
+ℹ   spike_slab: running 100 bootstraps...
+✔   spike_slab: nogueira=0.127, n_selected_50=0
+ℹ   shap_xgboost: running 100 bootstraps...
+✔   shap_xgboost: nogueira=0.121, n_selected_50=0
+
+── Dataset: ST000496 ──
+
+ℹ   wilcoxon_fdr: running 100 bootstraps...
+✔   wilcoxon_fdr: nogueira=0.394, n_selected_50=2
+ℹ   fold_change: running 100 bootstraps...
+✔   fold_change: nogueira=0.587, n_selected_50=22
+ℹ   volcano: running 100 bootstraps...
+✔   volcano: nogueira=0.372, n_selected_50=1
+ℹ   lasso: running 100 bootstraps...
+✔   lasso: nogueira=0.453, n_selected_50=8
+ℹ   elastic_net: running 100 bootstraps...
+✔   elastic_net: nogueira=0.439, n_selected_50=21
+ℹ   boruta: running 100 bootstraps...
+✔   boruta: nogueira=0.463, n_selected_50=9
+ℹ   rf_importance: running 100 bootstraps...
+✔   rf_importance: nogueira=0.425, n_selected_50=3
+ℹ   stability_selection: running 100 bootstraps...
+✔   stability_selection: nogueira=0.695, n_selected_50=2
+ℹ   knockoff: running 100 bootstraps...
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+! Knockoff: n <= p (64 <= 69), skipping
+✔   knockoff: nogueira=NA, n_selected_50=0
+ℹ   spike_slab: running 100 bootstraps...
+✔   spike_slab: nogueira=0.402, n_selected_50=7
+ℹ   shap_xgboost: running 100 bootstraps...
+✔   shap_xgboost: nogueira=0.497, n_selected_50=4
+
+── Dataset: MTBLS28 ──
+
+ℹ   wilcoxon_fdr: running 100 bootstraps...
+✔   wilcoxon_fdr: nogueira=0.679, n_selected_50=499
+ℹ   fold_change: running 100 bootstraps...
+✔   fold_change: nogueira=0.674, n_selected_50=343
+ℹ   volcano: running 100 bootstraps...
+✔   volcano: nogueira=0.716, n_selected_50=69
+ℹ   lasso: running 100 bootstraps...
+✔   lasso: nogueira=0.404, n_selected_50=35
+ℹ   elastic_net: running 100 bootstraps...
+✔   elastic_net: nogueira=0.421, n_selected_50=50
+ℹ   boruta: running 100 bootstraps...
+=== Script 07: Cross-Database Validation ===
+
+── Script 07: Cross-Database Validation ────────────────────────────────────────
+ℹ Start time: 2026-03-22 08:28:50
+ℹ Seed: 42
+ℹ Cores: 40
+ℹ 9 datasets available for cross-validation
+
+── Part 1: Bootstrap FS on real datasets ───────────────────────────────────────
+ℹ Parallel plan: multisession with 40 workers
+
+── Dataset: ST001047 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: MTBLS404 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: ST001000 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: MTBLS136 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: MTBLS92 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: ST000369 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: ST000496 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: MTBLS28 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: running 100 bootstraps...

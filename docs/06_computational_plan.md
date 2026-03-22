@@ -1,7 +1,7 @@
 # Piano Computazionale
 
-> Ultimo aggiornamento: 2026-03-18 (rev. 2)
-> Status: AGGIORNATO con benchmark reali e ottimizzazioni GPU
+> Ultimo aggiornamento: 2026-03-21 (rev. 3)
+> Status: COMPLETATO — tempi reali documentati post-esecuzione
 
 ---
 
@@ -59,21 +59,21 @@ Worker 2: dataset_002 → [fc, wilcox, ...] → save 11 files
 Worker 100: dataset_100 → [...]
 ```
 
-### Configurazione
+### Configurazione (in produzione)
 
-- **Workers:** 100 (`future::multisession`)
-- **CPU:** 128 core disponibili, 28 riservati al sistema
-- **GPU:** 1× RTX 4090 condivisa (usata da shap_xgboost, ~0.4s/fit → contention trascurabile)
+- **Workers:** 40 (`parallel::mclapply`, fork-based)
+- **CPU:** 128 core disponibili, 40 usati per worker
+- **GPU:** disabilitata (`CUDA_VISIBLE_DEVICES=""`) — XGBoost SHAP su CPU per evitare stalli con fork
 - **Thread interni:** `num.threads = 1` in ranger/Boruta per evitare contention tra worker
 
-### Stima runtime
+### Stima vs realtà
 
 ```
-1590 dataset / 100 worker = 16 batch
-16 batch × 22 min/dataset = ~5.8 ore
+Stima originale: 1590 dataset / 100 worker × 22 min/dataset = ~5.8 ore
+Runtime reale:   ~56 ore (2 giorni 8 ore) con 40 worker mclapply CPU-only
 ```
 
-Con overhead I/O e varianza tra scenari (p=1000 più lento): **stima conservativa ~6-8 ore**.
+Fattori di differenza: (1) worker ridotti da 100 a 40, (2) SHAP su CPU (no GPU), (3) scenari S8 semi-sintetici hanno p variabile fino a 1533 (vs p=500 benchmark), (4) overhead fork/GC.
 
 ---
 
