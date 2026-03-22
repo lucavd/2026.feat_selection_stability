@@ -80,6 +80,7 @@
 | 59 | `ioannidis2005why` | Most research findings are false: contextualizes biomarker irreproducibility | Introduction | DOI-VERIFIED |
 | 60 | `li2022benchmark` | Multi-omics FS benchmark: block vs. concurrent strategies | Discussion | DOI-VERIFIED |
 | 61 | `efron2004large` | Large-scale simultaneous testing: empirical null, FDR behavior | Introduction; Discussion | DOI-VERIFIED |
+| 62 | `harrell2015regression` | "Don't do variable selection": authoritative case against FS in predictive modeling; Ch. 4 on dimensionality reduction as alternative | Discussion §Recommendations | DOI-VERIFIED |
 
 ---
 
@@ -87,9 +88,9 @@
 
 | Status | Count | Meaning |
 |--------|-------|---------|
-| **DOI-VERIFIED** | 52 | DOI resolved via Crossref/doi.org API, title confirmed matching |
+| **DOI-VERIFIED** | 53 | DOI resolved via Crossref/doi.org API, title confirmed matching |
 | **NO-DOI** | 9 | No DOI exists; verified via PMCID, URL, or CRAN page |
-| **Total** | **61** | |
+| **Total** | **62** | |
 
 ## Verification details
 

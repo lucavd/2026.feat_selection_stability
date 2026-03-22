@@ -94,10 +94,9 @@ fig1 <- ggplot(metrics_ok, aes(x = reorder(method, nogueira, FUN = median),
   geom_boxplot(outlier.size = 0.5, alpha = 0.8) +
   scale_fill_manual(values = cat_colors, name = "Category") +
   coord_flip() +
-  labs(x = NULL, y = "Nogueira Stability Index",
-       title = "Feature selection stability across simulation scenarios") +
+  labs(x = NULL, y = "Nogueira Stability Index") +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "grey50") +
-  annotate("text", x = 0.5, y = 0.52, label = "chance level",
+  annotate("text", x = 2.2, y = 0.52, label = "chance level",
            hjust = 0, size = 3, color = "grey50")
 
 save_fig(fig1, "fig01_stability_overview", width = 8, height = 6)
@@ -121,8 +120,7 @@ if (!is.null(metrics_summary)) {
     geom_text_repel(aes(label = method), size = 3, max.overlaps = 15) +
     scale_color_manual(values = cat_colors, name = "Category") +
     scale_size_continuous(name = "Avg. features\nselected", range = c(2, 8)) +
-    labs(x = "Stability (Nogueira Index)", y = "Sensitivity (TPR)",
-         title = "Stability–accuracy trade-off") +
+    labs(x = "Stability (Nogueira Index)", y = "Sensitivity (TPR)") +
     geom_vline(xintercept = 0.5, linetype = "dashed", alpha = 0.3) +
     geom_hline(yintercept = 0.5, linetype = "dashed", alpha = 0.3)
 
@@ -141,8 +139,7 @@ if (!is.null(metrics_summary)) {
     scale_fill_viridis(name = "Nogueira\nIndex", option = "D", limits = c(0, 1)) +
     facet_wrap(~scenario, scales = "free_y", ncol = 2) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 7)) +
-    labs(x = NULL, y = NULL,
-         title = "Stability across simulation scenarios")
+    labs(x = NULL, y = NULL)
 
   save_fig(fig3, "fig03_scenario_heatmap", width = 12, height = 10)
 }
@@ -159,8 +156,7 @@ if (nrow(s1_data) > 0) {
     geom_boxplot(outlier.size = 0.5, alpha = 0.8) +
     scale_fill_manual(values = cat_colors, name = "Category") +
     facet_wrap(~method, ncol = 4) +
-    labs(x = "p/n ratio", y = "Nogueira Stability Index",
-         title = "Impact of dimensionality on feature selection stability") +
+    labs(x = "p/n ratio", y = "Nogueira Stability Index") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
   save_fig(fig4, "fig04_pn_ratio", width = 12, height = 8)
@@ -174,15 +170,14 @@ cli::cli_h1("Figure 5: Correlation Effect")
 
 s3_data <- metrics_ok[scenario == "S3_correlation"]
 if (nrow(s3_data) > 0) {
-  fig5 <- ggplot(s3_data, aes(x = level, y = nogueira, color = method, group = method)) +
-    stat_summary(fun = mean, geom = "line", alpha = 0.7) +
-    stat_summary(fun = mean, geom = "point", size = 2) +
-    stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.1, alpha = 0.5) +
-    scale_color_viridis_d(name = "Method") +
-    labs(x = "Correlation Level", y = "Nogueira Stability Index",
-         title = "Impact of feature correlation on stability")
+  fig5 <- ggplot(s3_data, aes(x = level, y = nogueira, fill = category)) +
+    geom_boxplot(outlier.size = 0.5, alpha = 0.8) +
+    scale_fill_manual(values = cat_colors, name = "Category") +
+    facet_wrap(~method, ncol = 4) +
+    labs(x = "Correlation level", y = "Nogueira Stability Index") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-  save_fig(fig5, "fig05_correlation_effect", width = 9, height = 6)
+  save_fig(fig5, "fig05_correlation_effect", width = 12, height = 8)
 }
 
 # ==============================================================================
@@ -195,12 +190,12 @@ fig6 <- ggplot(metrics_ok, aes(x = reorder(method, fdr, FUN = median),
                                 y = fdr, fill = category)) +
   geom_boxplot(outlier.size = 0.5, alpha = 0.8) +
   scale_fill_manual(values = cat_colors, name = "Category") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   coord_flip() +
   geom_hline(yintercept = 0.05, linetype = "dashed", color = "red", alpha = 0.5) +
-  annotate("text", x = 0.5, y = 0.07, label = "nominal FDR = 0.05",
+  annotate("text", x = 1.2, y = 0.07, label = "5% nominal",
            hjust = 0, size = 3, color = "red") +
-  labs(x = NULL, y = "False Discovery Rate",
-       title = "FDR control across methods")
+  labs(x = NULL, y = "False Discovery Rate (FDR)")
 
 save_fig(fig6, "fig06_fdr_control", width = 8, height = 6)
 
@@ -216,8 +211,7 @@ if (!is.null(cv_summary) && nrow(cv_summary) > 0) {
     geom_boxplot(alpha = 0.8) +
     scale_fill_manual(values = cat_colors, name = "Category") +
     coord_flip() +
-    labs(x = NULL, y = "Nogueira Stability Index",
-         title = "Feature selection stability on real metabolomics data")
+    labs(x = NULL, y = "Nogueira Stability Index")
 
   save_fig(fig7, "fig07_real_data_stability", width = 8, height = 6)
 }
@@ -234,8 +228,7 @@ if (!is.null(concordance) && nrow(concordance) > 0) {
     geom_boxplot(alpha = 0.8) +
     scale_fill_manual(values = cat_colors, name = "Category") +
     coord_flip() +
-    labs(x = NULL, y = "Spearman Correlation of Selection Frequencies",
-         title = "Cross-database concordance of feature selection") +
+    labs(x = NULL, y = "Spearman Correlation of Selection Frequencies") +
     geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.3)
 
   save_fig(fig8, "fig08_cross_database_concordance", width = 8, height = 6)
@@ -250,10 +243,7 @@ cli::cli_h1("Supplementary Figure: Composite")
 if (exists("fig1") && exists("fig6")) {
   fig_supp <- fig1 + fig6 +
     plot_layout(ncol = 2) +
-    plot_annotation(
-      title = "Feature Selection Stability and FDR Control",
-      tag_levels = "A"
-    )
+    plot_annotation(tag_levels = "A")
   save_fig(fig_supp, "fig_supp_composite", width = 14, height = 6)
 }
 

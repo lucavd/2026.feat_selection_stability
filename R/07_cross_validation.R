@@ -215,6 +215,11 @@ for (plat in names(platform_groups)) {
 
       # Concordance metrics
       # 1. Spearman correlation of selection frequencies
+      complete_pairs <- sum(!is.na(freq1) & !is.na(freq2))
+      if (complete_pairs < 3) {
+        cli::cli_alert_warning("  {method$name}: only {complete_pairs} complete freq pairs, skipping")
+        next
+      }
       spearman_cor <- cor(freq1, freq2, method = "spearman", use = "complete.obs")
 
       # 2. Jaccard of stably selected features (>50%)

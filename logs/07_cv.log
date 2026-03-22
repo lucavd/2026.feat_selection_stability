@@ -915,3 +915,408 @@ Loaded glmnet 4.1-10
 ℹ   lasso: already computed, skipping
 ℹ   elastic_net: already computed, skipping
 ℹ   boruta: running 100 bootstraps...
+✔   boruta: nogueira=0.552, n_selected_50=52
+ℹ   rf_importance: running 100 bootstraps...
+✔   rf_importance: nogueira=0.489, n_selected_50=2
+ℹ   stability_selection: running 100 bootstraps...
+✔   stability_selection: nogueira=0.65, n_selected_50=4
+ℹ   knockoff: running 100 bootstraps...
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+! Knockoff: n <= p (635 <= 1359), skipping
+✔   knockoff: nogueira=NA, n_selected_50=0
+ℹ   spike_slab: running 100 bootstraps...
+✔   spike_slab: nogueira=0.17, n_selected_50=4
+ℹ   shap_xgboost: running 100 bootstraps...
+✔   shap_xgboost: nogueira=0.51, n_selected_50=3
+
+── Dataset: ST001706 ──
+
+ℹ   wilcoxon_fdr: running 100 bootstraps...
+✔   wilcoxon_fdr: nogueira=0.704, n_selected_50=29
+ℹ   fold_change: running 100 bootstraps...
+✔   fold_change: nogueira=0.852, n_selected_50=24
+ℹ   volcano: running 100 bootstraps...
+✔   volcano: nogueira=0.724, n_selected_50=10
+ℹ   lasso: running 100 bootstraps...
+✔   lasso: nogueira=0.521, n_selected_50=7
+ℹ   elastic_net: running 100 bootstraps...
+✔   elastic_net: nogueira=0.631, n_selected_50=15
+ℹ   boruta: running 100 bootstraps...
+✔   boruta: nogueira=0.657, n_selected_50=23
+ℹ   rf_importance: running 100 bootstraps...
+✔   rf_importance: nogueira=0.628, n_selected_50=7
+ℹ   stability_selection: running 100 bootstraps...
+✔   stability_selection: nogueira=0.515, n_selected_50=2
+ℹ   knockoff: running 100 bootstraps...
+Loading required package: Matrix
+Loaded glmnet 4.1-10
+✔   knockoff: nogueira=0.004, n_selected_50=0
+ℹ   spike_slab: running 100 bootstraps...
+✔   spike_slab: nogueira=NA, n_selected_50=0
+ℹ   shap_xgboost: running 100 bootstraps...
+✔   shap_xgboost: nogueira=0.456, n_selected_50=2
+There were 50 or more warnings (use warnings() to see the first 50)
+
+── Part 2: Cross-database concordance ──────────────────────────────────────────
+
+── Platform: GC-MS (2 datasets) ──
+
+ℹ Comparing ST000369 vs ST000496
+Error in cor(freq1, freq2, method = "spearman", use = "complete.obs") : 
+  no complete element pairs
+Execution halted
+=== Script 07: Cross-Database Validation ===
+
+── Script 07: Cross-Database Validation ────────────────────────────────────────
+ℹ Start time: 2026-03-22 13:10:30
+ℹ Seed: 42
+ℹ Cores: 40
+ℹ 9 datasets available for cross-validation
+
+── Part 1: Bootstrap FS on real datasets ───────────────────────────────────────
+ℹ Parallel plan: multisession with 40 workers
+
+── Dataset: ST001047 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: MTBLS404 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: ST001000 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: MTBLS136 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: MTBLS92 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: ST000369 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: ST000496 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: MTBLS28 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Dataset: ST001706 ──
+
+ℹ   wilcoxon_fdr: already computed, skipping
+ℹ   fold_change: already computed, skipping
+ℹ   volcano: already computed, skipping
+ℹ   lasso: already computed, skipping
+ℹ   elastic_net: already computed, skipping
+ℹ   boruta: already computed, skipping
+ℹ   rf_importance: already computed, skipping
+ℹ   stability_selection: already computed, skipping
+ℹ   knockoff: already computed, skipping
+ℹ   spike_slab: already computed, skipping
+ℹ   shap_xgboost: already computed, skipping
+
+── Part 2: Cross-database concordance ──────────────────────────────────────────
+
+── Platform: GC-MS (2 datasets) ──
+
+ℹ Comparing ST000369 vs ST000496
+!   knockoff: only 0 complete freq pairs, skipping
+
+── Platform: LC-MS (5 datasets) ──
+
+ℹ Comparing MTBLS404 vs ST001000
+!   knockoff: only 0 complete freq pairs, skipping
+ℹ Comparing MTBLS404 vs MTBLS136
+!   knockoff: only 0 complete freq pairs, skipping
+ℹ Comparing MTBLS404 vs MTBLS92
+!   knockoff: only 0 complete freq pairs, skipping
+!   spike_slab: only 0 complete freq pairs, skipping
+ℹ Comparing MTBLS404 vs MTBLS28
+!   wilcoxon_fdr: only 0 common features, skipping
+!   fold_change: only 0 common features, skipping
+!   volcano: only 0 common features, skipping
+!   lasso: only 0 common features, skipping
+!   elastic_net: only 0 common features, skipping
+!   boruta: only 0 common features, skipping
+!   rf_importance: only 0 common features, skipping
+!   stability_selection: only 0 common features, skipping
+!   knockoff: only 0 common features, skipping
+!   spike_slab: only 0 common features, skipping
+!   shap_xgboost: only 0 common features, skipping
+ℹ Comparing ST001000 vs MTBLS136
+!   knockoff: only 0 complete freq pairs, skipping
+ℹ Comparing ST001000 vs MTBLS92
+!   knockoff: only 0 complete freq pairs, skipping
+!   spike_slab: only 0 complete freq pairs, skipping
+ℹ Comparing ST001000 vs MTBLS28
+!   wilcoxon_fdr: only 0 common features, skipping
+!   fold_change: only 0 common features, skipping
+!   volcano: only 0 common features, skipping
+!   lasso: only 0 common features, skipping
+!   elastic_net: only 0 common features, skipping
+!   boruta: only 0 common features, skipping
+!   rf_importance: only 0 common features, skipping
+!   stability_selection: only 0 common features, skipping
+!   knockoff: only 0 common features, skipping
+!   spike_slab: only 0 common features, skipping
+!   shap_xgboost: only 0 common features, skipping
+ℹ Comparing MTBLS136 vs MTBLS92
+!   knockoff: only 0 complete freq pairs, skipping
+!   spike_slab: only 0 complete freq pairs, skipping
+ℹ Comparing MTBLS136 vs MTBLS28
+!   wilcoxon_fdr: only 0 common features, skipping
+!   fold_change: only 0 common features, skipping
+!   volcano: only 0 common features, skipping
+!   lasso: only 0 common features, skipping
+!   elastic_net: only 0 common features, skipping
+!   boruta: only 0 common features, skipping
+!   rf_importance: only 0 common features, skipping
+!   stability_selection: only 0 common features, skipping
+!   knockoff: only 0 common features, skipping
+!   spike_slab: only 0 common features, skipping
+!   shap_xgboost: only 0 common features, skipping
+ℹ Comparing MTBLS92 vs MTBLS28
+!   wilcoxon_fdr: only 0 common features, skipping
+!   fold_change: only 0 common features, skipping
+!   volcano: only 0 common features, skipping
+!   lasso: only 0 common features, skipping
+!   elastic_net: only 0 common features, skipping
+!   boruta: only 0 common features, skipping
+!   rf_importance: only 0 common features, skipping
+!   stability_selection: only 0 common features, skipping
+!   knockoff: only 0 common features, skipping
+!   spike_slab: only 0 common features, skipping
+!   shap_xgboost: only 0 common features, skipping
+
+── Platform: NMR (2 datasets) ──
+
+ℹ Comparing ST001047 vs ST001706
+!   wilcoxon_fdr: only 0 common features, skipping
+!   fold_change: only 0 common features, skipping
+!   volcano: only 0 common features, skipping
+!   lasso: only 0 common features, skipping
+!   elastic_net: only 0 common features, skipping
+!   boruta: only 0 common features, skipping
+!   rf_importance: only 0 common features, skipping
+!   stability_selection: only 0 common features, skipping
+!   knockoff: only 0 common features, skipping
+!   spike_slab: only 0 common features, skipping
+!   shap_xgboost: only 0 common features, skipping
+Warning messages:
+1: In cor(freq1, freq2, method = "spearman", use = "complete.obs") :
+  the standard deviation is zero
+2: In cor(freq1, freq2, method = "spearman", use = "complete.obs") :
+  the standard deviation is zero
+3: In cor(freq1, freq2, method = "spearman", use = "complete.obs") :
+  the standard deviation is zero
+ℹ Concordance pairs computed: 67
+✔ Saved: concordance_results.rds
+
+── Cross-Validation Summary ────────────────────────────────────────────────────
+✔ Saved: cv_summary.rds
+
+── Stability on real data by method ──
+
+                 method category nogueira_mean jaccard_mean n_selected
+                 <char>   <char>         <num>        <num>      <num>
+ 1:          spike_slab bayesian         0.229        0.182        4.3
+ 2:         elastic_net embedded         0.424        0.366       23.1
+ 3:            knockoff embedded         0.001        0.951        0.0
+ 4:               lasso embedded         0.380        0.305       13.0
+ 5:         fold_change   filter         0.561        0.667      211.3
+ 6:             volcano   filter         0.446        0.519       28.8
+ 7:        wilcoxon_fdr   filter         0.493        0.530       88.2
+ 8: stability_selection     meta         0.436        0.523        1.3
+ 9:        shap_xgboost       ml         0.338        0.266        1.7
+10:              boruta  wrapper         0.454        0.364       16.2
+11:       rf_importance  wrapper         0.402        0.325        2.4
+ℹ Parallel plan reset to sequential
+✔ Script 07 completed at 2026-03-22 13:10:34
+ℹ Session info saved to results/session_info_07.txt
+
+=== Script 07: Complete ===

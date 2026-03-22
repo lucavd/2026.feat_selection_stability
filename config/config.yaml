@@ -307,7 +307,7 @@ metrics:
 # FIGURE
 # ------------------------------------------------------------------------------
 figures:
-  format: "pdf"
+  format: "png"
   dpi: 300
   width: 7
   height: 5

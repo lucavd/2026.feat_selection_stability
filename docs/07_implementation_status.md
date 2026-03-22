@@ -1,7 +1,7 @@
 # Stato Implementazione Pipeline
 
-> Ultimo aggiornamento: 2026-03-21
-> Status: SCRIPT 05 + 06 COMPLETATI — metriche calcolate, pronto per 07/08
+> Ultimo aggiornamento: 2026-03-22
+> Status: SCRIPT 07 COMPLETATO — cross-validation OK, pronto per 08 (figure)
 
 ---
 
@@ -17,7 +17,7 @@
 | `R/04_simulate.R` | ✅ | ✅ | MVN → exp → FC + confounders + interazioni + MNAR missing. Supporta `correlation_source`: empirical, ar1, block |
 | `R/05_feature_selection.R` | ✅ | ✅ | 11 metodi × 100 bootstrap, checkpointing, parallelizzato per dataset (40 worker mclapply). Runtime: ~56 ore |
 | `R/06_metrics.R` | ✅ | ✅ | Nogueira, Jaccard, TPR, FDR, AUC (split stratificato, feature priority), parsimonia. 14,576 righe, 12,985 successi |
-| `R/07_cross_validation.R` | ✅ | — | Bootstrap FS su dati reali + concordanza cross-database. Gestisce edge case 0/1 bootstrap convergenti |
+| `R/07_cross_validation.R` | ✅ | ✅ | Bootstrap FS su dati reali + concordanza cross-database. Gestisce edge case 0/1 bootstrap convergenti |
 | `R/08_figures.R` | ✅ | — | 8 figure PDF publication-quality + supplementari |
 | `R/utils/helpers.R` | ✅ | ✅ | Config, logging, checkpoint, seed deterministico, parallelizzazione (cap 100 workers) |
 | `R/utils/fs_methods.R` | ✅ | ✅ | 12 wrapper con interfaccia uniforme + dispatcher |
@@ -102,6 +102,31 @@
 - Script 04: ~2 minuti (780 MVN + 810 semi-sintetici)
 - Script 05: **~56 ore** (2 giorni 8 ore) con 40 worker mclapply (18 Mar 22:31 → 21 Mar 06:39)
 - Script 06: completato 21 Mar 2026
+- Script 07: **~18 ore** (21 Mar 18:56 → 22 Mar 13:10) — 9 dataset × 11 metodi × 100 bootstrap + concordanza
+
+### 2.9 Script 07 — Cross-Validation (COMPLETATO)
+
+- **99 file RDS** prodotti in `results/cross_validation/` (9 dataset × 11 metodi)
+- **67 coppie concordanza** calcolate (cross-database, stessa piattaforma)
+- Knockoff: 0 convergenze su tutti i dataset (n ≤ p ovunque)
+- Molte coppie cross-platform con 0 common features (nomi metaboliti diversi — atteso)
+- Fix applicato: guard per `cor()` con < 3 complete pairs (evita crash)
+
+#### Stabilità sui dati reali (media per metodo)
+
+| Metodo | Categoria | Nogueira | Jaccard | n_selected |
+|--------|-----------|----------|---------|------------|
+| fold_change | filter | 0.561 | 0.667 | 211.3 |
+| wilcoxon_fdr | filter | 0.493 | 0.530 | 88.2 |
+| boruta | wrapper | 0.454 | 0.364 | 16.2 |
+| volcano | filter | 0.446 | 0.519 | 28.8 |
+| stability_selection | meta | 0.436 | 0.523 | 1.3 |
+| elastic_net | embedded | 0.424 | 0.366 | 23.1 |
+| rf_importance | wrapper | 0.402 | 0.325 | 2.4 |
+| lasso | embedded | 0.380 | 0.305 | 13.0 |
+| shap_xgboost | ml | 0.338 | 0.266 | 1.7 |
+| spike_slab | bayesian | 0.229 | 0.182 | 4.3 |
+| knockoff | embedded | 0.001 | 0.951 | 0.0 |
 
 ### 2.7 Script 05 — Feature Selection (COMPLETATO)
 
@@ -441,10 +466,10 @@ Tre approcci testati per accelerare Boruta, nessuno dei quali ha funzionato:
 - [x] Script 06 eseguito — 14,576 righe metriche (12,985 successi, 1,591 insufficient_convergence)
 
 ### Prossimi passi
-1. [ ] Eseguire Script 07 (`Rscript R/07_cross_validation.R`) — cross-validation su dati reali
-2. [ ] Eseguire Script 08 (`Rscript R/08_figures.R`) — figure per il paper
-3. [ ] Analisi esplorativa dei risultati
-4. [ ] Stesura paper
+1. [x] Eseguire Script 07 (`Rscript R/07_cross_validation.R`) — completato 22 Mar 2026
+2. [x] Eseguire Script 08 (`Rscript R/08_figures.R`) — 9 figure PNG 300dpi generate, 22 Mar 2026
+3. [x] Verifica DOI bibliografia — 53/53 DOI verificati via Crossref, 22 Mar 2026
+4. [ ] Stesura paper — struttura Discussion in `manuscript/discussion_structure.md`
 
 ---
 
