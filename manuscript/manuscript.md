@@ -1,5 +1,5 @@
 ---
-title: "The stability illusion: A simulation-based assessment of feature selection methods for high-dimensional metabolomics data"
+title: "Feature selection methods fail to produce stable results in high-dimensional metabolomics data"
 author:
   - name: "[Author name]"
     affiliation: "[Affiliation]"
